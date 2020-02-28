@@ -22,16 +22,23 @@ func svcHandler(w http.ResponseWriter, r *http.Request) {
 
 // Handler function for registering a tweed/broker
 func registerHandler(w http.ResponseWriter, r *http.Request) {
+	//vars := mux.Vars(r)
+	//broker := vars["broker"]
+
 	fmt.Fprint(w, "Broker Registration Endpoint Hit")
 }
 
 // Provisioning function for services
 func provisionHandler(w http.ResponseWriter, r *http.Request) {
+	//vars := mux.Vars(r)
+	//service := vars["service"]
 	fmt.Fprint(w, "Provisioning Endpoint Hit")
 }
 
 // Deprovisioning function for services
 func deprovisionHandler(w http.ResponseWriter, r *http.Request) {
+	//vars := mux.Vars(r)
+	//service := vars["service"]
 	fmt.Fprint(w, "Deprovisioning Endpoint Hit")
 }
 
@@ -46,9 +53,9 @@ func main() {
 	r.HandleFunc("/", handler)
 	r.HandleFunc("/tweed", tweedHandler)
 	r.HandleFunc("/svc", svcHandler)
-	r.HandleFunc("/register", registerHandler)
-	r.HandleFunc("/provision", provisionHandler)
-	r.HandleFunc("/deprovision", deprovisionHandler)
+	r.HandleFunc("/register/{broker}", registerHandler)
+	r.HandleFunc("/provision/{service}", provisionHandler)
+	r.HandleFunc("/deprovision/{service}", deprovisionHandler)
 	r.HandleFunc("/list", listHandler)
 
 	log.Fatal(http.ListenAndServe(":8081", r))
