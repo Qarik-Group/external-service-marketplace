@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -50,5 +51,6 @@ func main() {
 	r.HandleFunc("/deprovision", deprovisionHandler)
 	r.HandleFunc("/list", listHandler)
 
-	http.ListenAndServe(":80", r)
+	log.Fatal(http.ListenAndServe(":8081", r))
+
 }
