@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
-	"strings"
 
 	"github.com/tweedproject/tweed/api"
 )
@@ -21,9 +20,6 @@ type client struct {
 }
 
 func Connect(url string, user string, pass string) *client {
-	if !strings.HasPrefix(url, "https") {
-		url = "https://" + url
-	}
 	return &client{
 		http:     http.DefaultClient,
 		url:      url,
@@ -47,11 +43,10 @@ func (c *client) do(req *http.Request, out interface{}) (*http.Response, error) 
 		return res, err
 	}
 	defer res.Body.Close()
-
-	b, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return res, err
 	}
+	b, err := ioutil.ReadAll(res.Body)
 
 	var e api.ErrorResponse
 	if res.StatusCode == 401 || res.StatusCode == 403 || res.StatusCode == 404 || res.StatusCode == 500 {
