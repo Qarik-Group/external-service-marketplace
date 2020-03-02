@@ -7,29 +7,20 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 )
 
 func TweedURL() string {
 	url, here := os.LookupEnv("TWEED_URL")
+	fmt.Printf(url)
 	if !here {
-		var hostStr = "kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type==" + "ExternalIP" + ")].address"
-		var portStr = "ubectl -n ${NAMESPACE:-tweed} get service tweed -o jsonpath='{.spec.ports[?(@.name==" + "tweed" + ")].nodePort}'"
-		hostOut, err := exec.Command(hostStr).Output()
-		if err != nil {
-			log.Fatal("Error getting Tweed host from kubectl", err)
-		}
-		portOut, err := exec.Command(portStr).Output()
-		if err != nil {
-			log.Fatal("Error getting Tweed port from kubectl", err)
-		}
-		url = "http://" + string(hostOut) + ":" + string(portOut)
+		log.Fatal("There was no TWEED_URL found on ur local environment")
 	}
 	return url
 }
 
 func GetUserName() string {
 	un, err := os.LookupEnv("TWEED_USERNAME")
+	fmt.Printf(un)
 	if !err {
 		log.Fatal("Set your TWEED_USERNAME env variable before using cli")
 	}
@@ -62,4 +53,12 @@ func ReadResponse(r *http.Response) []byte {
 		log.Fatal("Tried reading the response from the user and it aint good\n" + err.Error())
 	}
 	return bodyBytes
+}
+
+func MakeBody(v interface{}) []byte {
+	b, err := json.Marshal(v)
+	if err != nil {
+		log.Fatal("Error converting struct to []byte in MakeBody\n struct:" + err.Error())
+	}
+	return b
 }

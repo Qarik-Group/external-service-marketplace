@@ -3,12 +3,14 @@ package util
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"net/http/httputil"
+	"os"
 	"strings"
 
-	"github.com/hashicorp/vault/api"
+	"github.com/tweedproject/tweed/api"
 )
 
 type client struct {
@@ -33,20 +35,32 @@ func Connect(url string, user string, pass string) *client {
 func (c *client) do(req *http.Request, out interface{}) (*http.Response, error) {
 	req.SetBasicAuth(c.username, c.password)
 	res, err := c.http.Do(req)
-	if err != nil {
+	if res != nil {
+		b, err := httputil.DumpResponse(res, true)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "DEBUG: @W{unable to dump response:} @R{%s}\n", err)
+		} else {
+			fmt.Fprintf(os.Stderr, "%s\n\n", string(b))
+		}
+	}
+	if err != nil || out == nil {
 		return res, err
 	}
 	defer res.Body.Close()
+
 	b, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal("Failed to read the body into a []byte in do() of the client")
+		return res, err
 	}
+
 	var e api.ErrorResponse
-	if res.StatusCode > 399 {
+	if res.StatusCode == 401 || res.StatusCode == 403 || res.StatusCode == 404 || res.StatusCode == 500 {
 		if err = json.Unmarshal(b, &e); err != nil {
 			return res, err
 		}
+		return res, e
 	}
+
 	return res, json.Unmarshal(b, &out)
 }
 
@@ -59,7 +73,6 @@ func (c *client) requst(method string, path string, in interface{}) (*http.Reque
 		}
 		body.Write(b)
 	}
-	path = strings.TrimPrefix(path, "/")
 	req, err := http.NewRequest(method, c.url+path, &body)
 	if err != nil {
 		return nil, err
@@ -72,8 +85,8 @@ func (c *client) requst(method string, path string, in interface{}) (*http.Reque
 }
 
 //The in is a TweedRequest struct and out is a Tweed Response struct
-func (c *client) GET(path string, in interface{}, out interface{}) (*http.Response, error) {
-	req, err := c.requst("GET", path, in)
+func (c *client) GET(path string, out interface{}) (*http.Response, error) {
+	req, err := c.requst("GET", path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -89,6 +102,7 @@ func (c *client) POST(path string, in interface{}, out interface{}) error {
 	_, err = c.do(req, out)
 	return err
 }
+
 func (c *client) PUT(path string, in interface{}, out interface{}) error {
 	req, err := c.requst("PUT", path, in)
 	if err != nil {
@@ -97,6 +111,7 @@ func (c *client) PUT(path string, in interface{}, out interface{}) error {
 	_, err = c.do(req, out)
 	return err
 }
+
 func (c *client) DELETE(path string, in interface{}, out interface{}) error {
 	req, err := c.requst("DELETE", path, in)
 	if err != nil {
