@@ -12,6 +12,7 @@ func API() *mux.Router {
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello World"))
 	})
+	r.HandleFunc("/register/{broker}", ism_client.Register)
 	r.HandleFunc("/catalog", ism_client.Catalog)
 	r.HandleFunc("/provision/{service}/{plan}", ism_client.Provision)
 	r.HandleFunc("/deprovision/{instance}", ism_client.Deprovision)

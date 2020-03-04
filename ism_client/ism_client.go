@@ -2,6 +2,10 @@ package ism_client
 
 import "net/http"
 
+func Register(w http.ResponseWriter, r *http.Request) {
+	//register a broker
+	return
+}
 func Provision(w http.ResponseWriter, r *http.Request) {
 	//provision a specific tweed
 	return
