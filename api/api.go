@@ -12,9 +12,8 @@ func API() *mux.Router {
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello World"))
 	})
-	tweedRouter := r.PathPrefix("/tweed").Subrouter()
-	tweedRouter.HandleFunc("/catalog", ism_client.Connect)
-	tweedRouter.HandleFunc("/provision/{service}/{plan}", ism_client.Connect)
-	tweedRouter.HandleFunc("/deprovision/{service}/{plan}", ism_client.Connect)
+	r.HandleFunc("/catalog", ism_client.Catalog)
+	r.HandleFunc("/provision/{service}/{plan}", ism_client.Provision)
+	r.HandleFunc("/deprovision/{instance}", ism_client.Deprovision)
 	return r
 }
