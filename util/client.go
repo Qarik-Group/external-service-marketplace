@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"os"
 
+	"github.com/tweedproject/tweed"
 	"github.com/tweedproject/tweed/api"
 )
 
@@ -114,4 +116,89 @@ func (c *client) DELETE(path string, in interface{}, out interface{}) error {
 	}
 	_, err = c.do(req, out)
 	return err
+}
+
+func Catalog(w http.ResponseWriter, r *http.Request) {
+	c := Connect(TweedURL(), GetUserName(), GetPassword())
+	var cat tweed.Catalog
+	_, err := c.GET("/b/catalog", &cat)
+	if err != nil {
+		log.Fatal("Error getting response body in catalog from GET reques\n" + err.Error())
+	}
+	JSON(cat)
+	b, err := json.Marshal(cat)
+	if err != nil {
+		log.Fatal("Failed to convert Catalog to json using the JSON")
+	}
+	w.WriteHeader(200)
+	w.Write(b)
+}
+
+func Instances(w http.ResponseWriter, r *http.Request) {
+	c := Connect(TweedURL(), GetUserName(), GetPassword())
+	var out []api.InstanceResponse
+	_, err := c.GET("/b/instances", &out)
+	if err != nil {
+		log.Fatal("Error getting response body:\t instances from GET request to tweed \n\t" + err.Error())
+	}
+	JSON(out)
+	b, err := json.Marshal(out)
+	if err != nil {
+		log.Fatal("\nError encoding the []api.InstanceResponse from the body using Marshall\n" + err.Error())
+	}
+	w.WriteHeader(200)
+	w.Write(b)
+	//	var slice = MakeBody(out)
+}
+
+func InstancesId(w http.ResponseWriter, r *http.Request) {
+	c := Connect(TweedURL(), GetUserName(), GetPassword())
+	var out api.InstanceResponse
+	param := r.URL.Query().Get("instance")
+	_, err := c.GET("/b/instances/"+param, &out)
+	if err != nil {
+		log.Fatal("Error getting response body:\t instancesId from GET request to tweed \n\t" + err.Error())
+	}
+	JSON(out)
+	b, err := json.Marshal(out)
+	if err != nil {
+		log.Fatal("\nError encoding the []api.InstanceResponse from the body using Marshall\n" + err.Error())
+	}
+	w.WriteHeader(200)
+	w.Write(b)
+}
+
+func InstancesIdTasks(w http.ResponseWriter, r *http.Request) {
+	c := Connect(TweedURL(), GetUserName(), GetPassword())
+	var out api.TaskResponse
+	param := r.URL.Query().Get("instance")
+	_, err := c.GET("/b/instances/"+param, &out)
+	if err != nil {
+		log.Fatal("Error getting response body:\t instancesId from GET request to tweed \n\t" + err.Error())
+	}
+	JSON(out)
+	b, err := json.Marshal(out)
+	if err != nil {
+		log.Fatal("\nError encoding the []api.InstanceResponseTasks from the body using Marshall\n" + err.Error())
+	}
+	w.WriteHeader(200)
+	w.Write(b)
+}
+
+//Have not tested this as there are no active tasks currently to test the endpoint
+func InstancesIdTaskId(w http.ResponseWriter, r *http.Request) {
+	c := Connect(TweedURL(), GetUserName(), GetPassword())
+	var out api.TaskResponse
+	intanceId := r.URL.Query().Get("instance")
+	_, err := c.GET("/b/instances/"+intanceId, &out)
+	if err != nil {
+		log.Fatal("Error getting response body:\t instancesId from GET request to tweed \n\t" + err.Error())
+	}
+	JSON(out)
+	b, err := json.Marshal(out)
+	if err != nil {
+		log.Fatal("\nError encoding the []api.InstanceResponseTasks from the body using Marshall\n" + err.Error())
+	}
+	w.WriteHeader(200)
+	w.Write(b)
 }
