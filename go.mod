@@ -3,6 +3,7 @@ module github.com/starkandwayne/external-service-marketplace
 go 1.13
 
 require (
+	github.com/gorilla/mux v1.7.4
 	github.com/jhunt/go-ansi v0.0.0-20181127194324-5fd839f108b6
 	github.com/jhunt/go-cli v0.0.0-20180120230054-44398e595118
 	github.com/jhunt/go-envirotron v0.0.0-20191007155228-c8f2a184ad0f
