@@ -25,11 +25,19 @@ type Options struct {
 func main() {
 	var options Options
 	env.Override(&options)
+	options.Provision.Service = "Subcommand --service to be entered here\n"
+	options.Provision.Plan = "Subcommand --plan to be entered here \n "
 	command, args, err := cli.Parse(&options)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{!!! %s}\n", err)
 	}
 
-	fmt.Printf("running command @G{%s}...\n", command)
-	fmt.Printf("with arguments @C{%v}...\n", args)
+	if command == "catalog" {
+		fmt.Printf("List services \n")
+		fmt.Printf("running command @G{%s}...\n", command)
+		fmt.Printf("with arguments @C{%v}...\n", args)
+}
+	if command == "provision"{
+		fmt.Printf("Provisioning... %s  %s", options.Provision.Service, options.Provision.Plan)
+	}
 }
