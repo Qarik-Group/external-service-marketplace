@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -15,7 +16,7 @@ type API struct {
 func test_response(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Endpoint Hit")
 }
-func (api API) Run() *mux.Router {
+func (api API) Run() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello World"))
@@ -38,5 +39,7 @@ func (api API) Run() *mux.Router {
 	r.HandleFunc("/getbinding/{instance}", test_response)
 	//unbind an instance
 	r.HandleFunc("/unbind/{instance}", test_response)
-	return r
+
+	//start the server
+	log.Fatal(http.ListenAndServe(":8081", r))
 }
