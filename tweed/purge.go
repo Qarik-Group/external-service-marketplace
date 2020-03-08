@@ -1,13 +1,6 @@
 package tweed
 
-import (
-	fmt "github.com/jhunt/go-ansi"
-	"os"
-
-	"github.com/tweedproject/tweed/api"
-)
-
-func Purge(args []string) {
+/*func Purge(args []string) {
 	GonnaNeedATweed()
 	c := Connect(opts.Tweed, opts.Username, opts.Password)
 	ids := make([]string, 0)
@@ -55,4 +48,4 @@ func purge1(c *client, id string) int {
 	}
 	fmt.Printf("@R{%s}\n", out.Error)
 	return 5
-}
+}*/
