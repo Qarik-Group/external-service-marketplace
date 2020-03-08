@@ -124,14 +124,14 @@ func Catalog(w http.ResponseWriter, r *http.Request) {
 	c := Connect(util.GetTweedUrl(), username, password)
 	var cat tweed.Catalog
 	c.get("/b/catalog", &cat)
-	JSON(cat) //for debugging
+	util.JSON(cat) //for debugging
 	body, err := json.Marshal(cat)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write(body)
 		return
 	}
-	w.WriteHeader(http.StatusAccepted)
+	w.WriteHeader(http.StatusOK)
 	w.Write(body)
 }
 
@@ -157,7 +157,7 @@ func UnBind(w http.ResponseWriter, r *http.Request) {
 	var in UnbindCommand
 	json.Unmarshal(body, &in)
 	c.delete("/b/instances/:id/bindings/:bid", &un)
-	JSON(un)
+	util.JSON(un)
 	data, err := json.Marshal(un)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -202,11 +202,9 @@ func Bind(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//Broker will call the specified broker on the speicified Tweed instance
 func Broker(w http.ResponseWriter, r *http.Request) {
 }
 
-//Provision creates an instance of whatever you want on that specified Tweed instance
 func Provision(w http.ResponseWriter, r *http.Request) {
 
 }
@@ -214,24 +212,6 @@ func Provision(w http.ResponseWriter, r *http.Request) {
 func Deprovision(w http.ResponseWriter, r *http.Request) {
 
 }
-
-/*func Bindings(w http.ResponseWriter, r *http.Request) {
-	var out api.BindingsResponse
-	c := Connect(util.GetTweedUrl(), util.GetUsername(), util.GetPassword())
-	c.get("/b/instances/"+id+"/bindings", &out)
-	JSON(out)
-}*/
-
 func Purge(w http.ResponseWriter, r *http.Request) {
 
 }
-
-/*func Log(w http.ResponseWriter, r *http.Request) {
-	GonnaNeedATweed()
-	id := GonnaNeedAnInstance(args)
-
-	var out api.InstanceResponse
-	c := Connect(util.GetTweedUrl(), util.GetUsername(), util.GetPassword())
-	c.get("/b/instances/"+id, &out)
-	fmt.Printf("%s\n", out.Log)
-}*/
