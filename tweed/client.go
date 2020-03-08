@@ -63,13 +63,10 @@ func (c *client) request(method, path string, in interface{}) (*http.Request, er
 		}
 		body.Write(b)
 	}
-
-	path = strings.TrimPrefix(path, "/")
 	req, err := http.NewRequest(method, c.url+"/"+path, &body)
 	if err != nil {
 		return nil, err
 	}
-
 	req.Header.Add("Accept", "application/json")
 	if in != nil {
 		req.Header.Add("Content-Type", "application/json")
@@ -135,9 +132,7 @@ func Catalog(w http.ResponseWriter, r *http.Request) {
 	w.Write(body)
 }
 
-func CatalogTweeds(w http.ResponseWriter, r *http.Request) {
-
-}
+func CatalogTweeds(w http.ResponseWriter, r *http.Request) {}
 
 func UnBind(w http.ResponseWriter, r *http.Request) {
 	username, password, ok := r.BasicAuth()
@@ -177,7 +172,7 @@ func Bind(w http.ResponseWriter, r *http.Request) {
 	}
 	c := Connect(util.GetTweedUrl(), username, password)
 	instanceID := r.URL.Query().Get("instance")
-	if len(instanceID) == 0 {
+	if len(instanceID) <= 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("There is no instance id specified in your request"))
 		return
@@ -194,12 +189,29 @@ func Bind(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
+		return
 	}
-	var out api.BindResponse
-	err = c.put("/b/instances/:id/bindings/:bid", &in, &out)
-	if err != nil {
+	if len(in.ID) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("There was no Bid provided in your request."))
+		return
+	}
 
+	var out api.BindResponse
+	err = c.put("/b/instances/"+instanceID+"/bindings/"+in.ID, &in, &out)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("There making the put request for your bind operation....\n"))
+		return
 	}
+	bod, err := json.Marshal(out)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(bod)
 }
 
 func Broker(w http.ResponseWriter, r *http.Request) {
