@@ -1,14 +1,6 @@
 package tweed
 
-import (
-	"os"
-
-	"github.com/jhunt/go-table"
-
-	"github.com/tweedproject/tweed/api"
-)
-
-func Instances(args []string) {
+/*func Instances(args []string) {
 	GonnaNeedATweed()
 	DontWantNoArgs(args)
 
@@ -27,4 +19,4 @@ func Instances(args []string) {
 		tbl.Row(nil, inst.ID, inst.State, inst.Service, inst.Plan)
 	}
 	tbl.Output(os.Stdout)
-}
+}*/

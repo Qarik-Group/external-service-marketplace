@@ -1,12 +1,6 @@
 package tweed
 
-import (
-	fmt "github.com/jhunt/go-ansi"
-
-	"github.com/tweedproject/tweed/api"
-)
-
-func Log(args []string) {
+/*func Log(args []string) {
 	GonnaNeedATweed()
 	id := GonnaNeedAnInstance(args)
 
@@ -14,4 +8,4 @@ func Log(args []string) {
 	c := Connect(opts.Tweed, opts.Username, opts.Password)
 	c.GET("/b/instances/"+id, &out)
 	fmt.Printf("%s\n", out.Log)
-}
+}*/
