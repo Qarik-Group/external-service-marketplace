@@ -218,7 +218,30 @@ func Broker(w http.ResponseWriter, r *http.Request) {
 }
 
 func Provision(w http.ResponseWriter, r *http.Request) {
-
+	username, password, ok := r.BasicAuth()
+	if !ok {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Could not extract username and password from the request"))
+		return
+	}
+	id := r.URL.Query().Get("instance")
+	c := Connect(util.GetTweedUrl(), username, password)
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
+	var in api.ProvisionRequest
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Unable to read in the body of your request"))
+	}
+	json.Unmarshal(body, &in)
+	var out api.ProvisionResponse
+	err = c.put("/b/instances/"+id, in, &out)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(out.Error + "\n\n" + err.Error()))
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(out.OK))
 }
 
 func Deprovision(w http.ResponseWriter, r *http.Request) {
