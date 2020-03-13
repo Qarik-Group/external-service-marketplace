@@ -1,12 +1,5 @@
 package tweed
 
-import (
-	fmt "github.com/jhunt/go-ansi"
-	"time"
-
-	"github.com/tweedproject/tweed/api"
-)
-
 type patience struct {
 	instance string
 	task     string
@@ -18,7 +11,7 @@ type patience struct {
 	quiet    bool
 }
 
-func (p patience) printf(f string, args ...interface{}) {
+/*func (p patience) printf(f string, args ...interface{}) {
 	if !p.quiet && !opts.JSON {
 		fmt.Printf(f, args...)
 	}
@@ -90,4 +83,4 @@ func await(c *client, p patience) bool {
 	}
 
 	panic("maflformed await() / patience call")
-}
+}*/

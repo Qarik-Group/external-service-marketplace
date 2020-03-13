@@ -1,13 +1,6 @@
 package tweed
 
-import (
-	fmt "github.com/jhunt/go-ansi"
-	"os"
-
-	"github.com/tweedproject/tweed/api"
-)
-
-func Check(args []string) {
+/*func Check(args []string) {
 	GonnaNeedATweed()
 	service, plan := GonnaNeedAServiceAndAPlan(args)
 
@@ -31,4 +24,4 @@ func Check(args []string) {
 		fmt.Printf("@R{%s}\n", out.Error)
 		os.Exit(5)
 	}
-}
+}*/

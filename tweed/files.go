@@ -1,14 +1,6 @@
 package tweed
 
-import (
-	"os"
-
-	"github.com/jhunt/go-table"
-
-	"github.com/tweedproject/tweed/api"
-)
-
-func Files(args []string) {
+/*func Files(args []string) {
 	GonnaNeedATweed()
 	id := GonnaNeedAnInstance(args)
 
@@ -26,4 +18,4 @@ func Files(args []string) {
 		tbl.Row(nil, file.Filename, file.Summary, file.Description)
 	}
 	tbl.Output(os.Stdout)
-}
+}*/

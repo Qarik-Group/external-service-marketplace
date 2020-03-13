@@ -1,14 +1,6 @@
 package tweed
 
-import (
-	fmt "github.com/jhunt/go-ansi"
-	"net/http"
-	"os"
-
-	"github.com/tweedproject/tweed"
-)
-
-func Broker(args []string) {
+/*func Broker(args []string) {
 	if len(args) != 0 {
 		fmt.Fprintf(os.Stderr, "ERROR: extra arguments found in invocation.\n")
 		fmt.Fprintf(os.Stderr, "tweed service broker SHUTTING DOWN.\n")
@@ -117,4 +109,4 @@ func Broker(args []string) {
 	fmt.Fprintf(os.Stderr, "tweed broker API spinning up...\n")
 	http.Handle("/b/", core.API())
 	http.ListenAndServe(opts.Broker.Listen, nil)
-}
+}*/

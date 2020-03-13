@@ -1,13 +1,6 @@
 package tweed
 
-import (
-	fmt "github.com/jhunt/go-ansi"
-	"os"
-
-	"github.com/tweedproject/tweed/api"
-)
-
-func Task(args []string) {
+/*func Task(args []string) {
 	GonnaNeedATweed()
 	id, tid := GonnaNeedAnInstanceAndATask(args)
 
@@ -42,3 +35,4 @@ func Task(args []string) {
 	fmt.Printf("---[ stderr ]-------------\n%s\n\n", out.Stderr)
 	fmt.Printf("--------------------------\n\n")
 }
+*/
