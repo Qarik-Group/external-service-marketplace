@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gorilla/mux"
+
 	"github.com/starkandwayne/external-service-marketplace/util"
 	"github.com/tweedproject/tweed"
 	"github.com/tweedproject/tweed/api"
@@ -171,7 +173,9 @@ func Bind(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c := Connect(util.GetTweedUrl(), username, password)
-	instanceID := r.URL.Query().Get("instance")
+	//instanceID := r.URL.Query().Get("instance")
+	vars := mux.Vars(r)
+	instanceID := vars["instance"]
 	if len(instanceID) <= 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("There is no instance id specified in your request"))
@@ -227,13 +231,18 @@ func Provision(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("instance")
 	c := Connect(util.GetTweedUrl(), username, password)
 	defer r.Body.Close()
-	body, err := ioutil.ReadAll(r.Body)
-	var in api.ProvisionRequest
+	_, err := ioutil.ReadAll(r.Body)
+	//var in api.ProvisionRequest
+	vars := mux.Vars(r)
+	in := api.ProvisionRequest{
+		Service: vars["service"],
+		Plan:    vars["plan"],
+	}
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte("Unable to read in the body of your request"))
 	}
-	json.Unmarshal(body, &in)
+	//json.Unmarshal(body, &in)
 	var out api.ProvisionResponse
 	err = c.put("/b/instances/"+id, in, &out)
 	if err != nil {
