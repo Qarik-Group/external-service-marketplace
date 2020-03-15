@@ -142,19 +142,30 @@ func UnBind(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c := Connect(util.GetTweedUrl(), username, password)
-	var un api.UnbindResponse
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
+		w.Write([]byte("Error reading the body passed into UnBind"))
+		return
 	}
 	var in util.UnbindCommand
-	json.Unmarshal(body, &in)
-	c.delete("/b/instances/:id/bindings/:bid", &un)
+	err = json.Unmarshal(body, &in)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Did you use the UnbindCommand struct in util directory when you created your request. Please use that format"))
+		return
+	}
+	var un api.UnbindResponse
+	if len(in.Args.InstanceBinding) < 2 {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("There was no Instance and or Binding Id passed in make sure that both are passed in"))
+		return
+	}
+	c.delete("/b/instances/"+in.Args.InstanceBinding[0]+"/bindings/"+in.Args.InstanceBinding[1], &un)
 	util.JSON(un)
 	data, err := json.Marshal(un)
-	if err != nil {
+	if un.Error != "" {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(data)
 		return

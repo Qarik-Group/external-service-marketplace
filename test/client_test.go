@@ -147,3 +147,54 @@ func TestProvisionIDServices(t *testing.T) {
 		t.Errorf(rr.Body.String())
 	}
 }
+
+func TestUnbindNoAuth(t *testing.T) {
+	var a util.UnbindCommand
+	body, _ := json.Marshal(a)
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl(), bytes.NewReader(body))
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.UnBind)
+	handler.ServeHTTP(rr, r)
+	if rr.Code != http.StatusUnauthorized {
+		t.Errorf(rr.Body.String())
+	}
+}
+func TestUnbindAuth(t *testing.T) {
+	var a util.UnbindCommand
+	body, _ := json.Marshal(a)
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl(), bytes.NewReader(body))
+	r.SetBasicAuth(util.GetUsername(), util.GetPassword())
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.UnBind)
+	handler.ServeHTTP(rr, r)
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf(rr.Body.String())
+	}
+}
+
+func TestUnbindAuthWithInstaceNoBinding(t *testing.T) {
+	var a util.UnbindCommand
+	instance := []string{"hello"}
+	a.Args.InstanceBinding = instance
+	body, _ := json.Marshal(a)
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl(), bytes.NewReader(body))
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.Provision)
+	handler.ServeHTTP(rr, r)
+	if rr.Code != http.StatusUnauthorized {
+		t.Errorf(rr.Body.String())
+	}
+}
+func TestUnbindAuthWithInstaceBinding(t *testing.T) {
+	var a util.UnbindCommand
+	InstanceBinding := []string{"hello", "hi"}
+	a.Args.InstanceBinding = InstanceBinding
+	body, _ := json.Marshal(a)
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl(), bytes.NewReader(body))
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.Provision)
+	handler.ServeHTTP(rr, r)
+	if rr.Code != http.StatusUnauthorized {
+		t.Errorf(rr.Body.String())
+	}
+}
