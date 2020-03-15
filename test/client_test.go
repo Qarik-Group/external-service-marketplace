@@ -136,7 +136,7 @@ func TestProvisionIDServices(t *testing.T) {
 	services := []string{"hello", "goodbye"}
 	prov.Args.ServicePlan = services
 	body, _ := json.Marshal(&prov)
-	r, _ := http.NewRequest("PUT", util.GetTweedUrl()+"/b/instances/"+"id", bytes.NewReader(body))
+	r, _ := http.NewRequest("PUT", util.GetTweedUrl()+"/b/instances/"+prov.ID, bytes.NewReader(body))
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(tweed.Provision)
 	handler.ServeHTTP(rr, r)
@@ -151,7 +151,7 @@ func TestProvisionIDServices(t *testing.T) {
 func TestUnbindNoAuth(t *testing.T) {
 	var a util.UnbindCommand
 	body, _ := json.Marshal(a)
-	r, _ := http.NewRequest("DELETE", util.GetTweedUrl(), bytes.NewReader(body))
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl()+"/b/instances/"+""+"/bindings/"+"", bytes.NewReader(body))
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(tweed.UnBind)
 	handler.ServeHTTP(rr, r)
@@ -162,7 +162,7 @@ func TestUnbindNoAuth(t *testing.T) {
 func TestUnbindAuth(t *testing.T) {
 	var a util.UnbindCommand
 	body, _ := json.Marshal(a)
-	r, _ := http.NewRequest("DELETE", util.GetTweedUrl(), bytes.NewReader(body))
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl()+"/b/instances/"+""+"/bindings/"+"", bytes.NewReader(body))
 	r.SetBasicAuth(util.GetUsername(), util.GetPassword())
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(tweed.UnBind)
@@ -177,7 +177,7 @@ func TestUnbindAuthWithInstaceNoBinding(t *testing.T) {
 	instance := []string{"hello"}
 	a.Args.InstanceBinding = instance
 	body, _ := json.Marshal(a)
-	r, _ := http.NewRequest("DELETE", util.GetTweedUrl(), bytes.NewReader(body))
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl()+"/b/instances/"+instance[0]+"/bindings/"+"", bytes.NewReader(body))
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(tweed.Provision)
 	handler.ServeHTTP(rr, r)
@@ -187,14 +187,53 @@ func TestUnbindAuthWithInstaceNoBinding(t *testing.T) {
 }
 func TestUnbindAuthWithInstaceBinding(t *testing.T) {
 	var a util.UnbindCommand
-	InstanceBinding := []string{"hello", "hi"}
-	a.Args.InstanceBinding = InstanceBinding
+	instancebinding := []string{"hello", "hi"}
+	a.Args.InstanceBinding = instancebinding
 	body, _ := json.Marshal(a)
-	r, _ := http.NewRequest("DELETE", util.GetTweedUrl(), bytes.NewReader(body))
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl()+"/b/instances/"+instancebinding[0]+"/bindings/"+instancebinding[1], bytes.NewReader(body))
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(tweed.Provision)
 	handler.ServeHTTP(rr, r)
 	if rr.Code != http.StatusUnauthorized {
+		t.Errorf(rr.Body.String())
+	}
+}
+
+func TestDeprovisionNoAuth(t *testing.T) {
+	var a util.DeprovisionCommand
+	body, _ := json.Marshal(a)
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl()+"/b/instances/"+"", bytes.NewReader(body))
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.Deprovision)
+	handler.ServeHTTP(rr, r)
+	if rr.Code != http.StatusUnauthorized {
+		t.Errorf(rr.Body.String())
+	}
+}
+
+func TestDeprovisionAuth(t *testing.T) {
+	var a util.DeprovisionCommand
+	body, _ := json.Marshal(a)
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl()+"/b/instances/"+"", bytes.NewReader(body))
+	r.SetBasicAuth(util.GetUsername(), util.GetPassword())
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.Deprovision)
+	handler.ServeHTTP(rr, r)
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf(rr.Body.String())
+	}
+}
+func TestDeprovisionAuthID(t *testing.T) {
+	var a util.DeprovisionCommand
+	instancebinding := []string{"hello"}
+	a.Args.InstanceIds = instancebinding
+	body, _ := json.Marshal(a)
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl()+"/b/instances/"+a.Args.InstanceIds[0], bytes.NewReader(body))
+	r.SetBasicAuth(util.GetUsername(), util.GetPassword())
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.Deprovision)
+	handler.ServeHTTP(rr, r)
+	if rr.Code != http.StatusOK {
 		t.Errorf(rr.Body.String())
 	}
 }
