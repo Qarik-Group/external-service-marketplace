@@ -124,7 +124,7 @@ func Catalog(w http.ResponseWriter, r *http.Request) {
 	util.JSON(cat)
 	body, err := json.Marshal(cat)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write(body)
 		return
 	}
@@ -171,7 +171,7 @@ func UnBind(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	w.Write([]byte(un.Ref))
 }
 
 func Bind(w http.ResponseWriter, r *http.Request) {
@@ -197,7 +197,7 @@ func Bind(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(out.OK))
+	w.Write([]byte(out.Ref))
 }
 
 func Provision(w http.ResponseWriter, r *http.Request) {
@@ -234,6 +234,35 @@ func Provision(w http.ResponseWriter, r *http.Request) {
 }
 
 func Deprovision(w http.ResponseWriter, r *http.Request) {
+	username, password, ok := r.BasicAuth()
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("No username and or password not good"))
+	}
+	c := Connect(util.GetTweedUrl(), username, password)
+	var in util.DeprovisionCommand
+	defer r.Body.Close()
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("The body passed in is not correct"))
+		return
+	}
+	json.Unmarshal(body, &in)
+	if len(in.Args.InstanceIds) < 1 {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Missing either instance id make sure your DeprovisionCommand you are requesting has the right id"))
+		return
+	}
+	var out api.UnbindResponse
+	c.delete("/b/instances/"+in.Args.InstanceIds[0], &out)
+	if out.Error != "" {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Some kind of issue sending your Deprovision request to tweed"))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(out.Ref))
 
 }
 func Purge(w http.ResponseWriter, r *http.Request) {
