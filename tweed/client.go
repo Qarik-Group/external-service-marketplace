@@ -181,6 +181,11 @@ func Bind(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("No username or password submited in your request"))
 		return
 	}
+
+	//vars := mux.Vars(r)
+	//instance := vars["instance"]
+	//binding := vars["binding"]
+
 	var bcmd util.BindCommand
 	err := json.NewDecoder(r.Body).Decode(&bcmd)
 	if err != nil {
@@ -190,6 +195,7 @@ func Bind(w http.ResponseWriter, r *http.Request) {
 	}
 	c := Connect(util.GetTweedUrl(), username, password)
 	var out api.BindResponse
+	//c.put(util.GetTweedUrl()+"/b/instances/"+instance+"/bindings/"+binding, nil, &out)
 	c.put(util.GetTweedUrl()+"/b/instances/"+bcmd.Args.ID+"/bindings/"+bcmd.ID, nil, &out)
 	if out.Error != "" {
 		w.WriteHeader(http.StatusInternalServerError)
