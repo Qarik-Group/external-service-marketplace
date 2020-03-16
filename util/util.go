@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 )
 
 func GetUsername() string {
@@ -15,7 +16,9 @@ func GetPassword() string {
 }
 
 func GetTweedUrl() string {
-	return os.Getenv("TWEED_URL")
+	url := os.Getenv("TWEED_URL")
+	strings.Trim(url, "http://")
+	return url
 }
 
 func JSON(v interface{}) {

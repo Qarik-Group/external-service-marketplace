@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 
 	"github.com/starkandwayne/external-service-marketplace/tweed"
@@ -13,12 +12,15 @@ import (
 )
 
 func TestCatalogNoAuth(t *testing.T) {
-	r, _ := http.NewRequest("GET", util.GetTweedUrl()+"/b/catalog", nil)
+	var in util.CatalogCommand
+	json.Marshal(in)
+	r, _ := http.NewRequest("GET", util.GetTweedUrl()+"/b/catalog", bytes.NewReader(nil))
 	rr := httptest.NewRecorder()
 	handler := http.HandlerFunc(tweed.Catalog)
 	handler.ServeHTTP(rr, r)
 	if status := rr.Code; status != http.StatusUnauthorized {
 		t.Errorf("Catalog did not return %v when sent a request with an empty BasicAuth but got %v", http.StatusUnauthorized, http.StatusOK)
+		return
 	}
 }
 
@@ -32,79 +34,206 @@ func TestCatalogTestWithAuth(t *testing.T) {
 	//confirms that the status does not get denied when credentials are passed to Catalog.
 	if status := rr.Code; status == http.StatusUnauthorized {
 		t.Errorf("Catalog did not Correctly handle user that is passing in crednetials. Got code %v", status)
+		return
 	} else if status != http.StatusOK {
 		t.Errorf("Got back a bad error form the tweed catalog: got %v want %v", status, http.StatusOK)
+		return
 	}
 	//if body is totally empty we did something wrong
 	if len(rr.Body.String()) <= 0 {
 		t.Errorf("The body was empty from the response of the Catalog handler")
+		return
 	}
 
 }
+
 func TestBindNoAuth(t *testing.T) {
-	r, _ := http.NewRequest("GET", util.GetTweedUrl()+"/b/catalog", nil)
-	r.Header.Add("Content-Type", "application/json")
-	handler := http.HandlerFunc(tweed.Bind)
+	id := "hi"
+	bid := "hello"
+	r, _ := http.NewRequest("PUT", util.GetTweedUrl()+"/b/instances/"+id+"/bindings/"+bid, nil)
 	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.Bind)
 	handler.ServeHTTP(rr, r)
-	if status := rr.Code; status != http.StatusUnauthorized {
-		t.Errorf("Catalog did not return %v when sent a request with an empty BasicAuth but got %v", http.StatusUnauthorized, http.StatusOK)
+	if rr.Code != http.StatusUnauthorized {
+		t.Errorf("Not passing crednetials allowed the Bind Function to fire off not good")
+		return
+	} else if rr.Code == http.StatusBadRequest {
+		t.Errorf("Error constructing your request double check that you made it right")
+		return
 	}
 }
-func TestBindAuthNoParam(t *testing.T) {
-	r, _ := http.NewRequest("GET", util.GetTweedUrl()+"/b/instances", nil)
-	r.Header.Add("Content-Type", "application/json")
+func TestBindAuth(t *testing.T) {
+	var in util.BindCommand
+	in.ID = "hello"
+	in.NoWait = true
+	in.ID = "hi"
+	in.Args.ID = "what isthis no clue haha"
+	body, _ := json.Marshal(&in)
+	r, _ := http.NewRequest("PUT", util.GetTweedUrl()+"/b/instances/"+in.Args.ID+"/bindings/"+in.ID, bytes.NewReader(body))
 	r.SetBasicAuth(util.GetUsername(), util.GetPassword())
-	handler := http.HandlerFunc(tweed.Bind)
 	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.Bind)
 	handler.ServeHTTP(rr, r)
-	if status := rr.Code; status != http.StatusBadRequest {
-		t.Errorf("Passing no parameter for Bind still worked Not Godd check the client.go")
+	if rr.Code == http.StatusUnauthorized {
+		t.Errorf(rr.Body.String())
+		return
+	} else if rr.Code == http.StatusBadRequest {
+		t.Errorf(rr.Body.String())
+		return
+	}
+	if rr.Code != http.StatusOK {
+		t.Errorf(rr.Body.String())
 	}
 }
 
-func TestBindNoBody(t *testing.T) {
-	r, err := http.NewRequest("GET", util.GetTweedUrl()+"/b/instances", nil)
-	if err != nil {
-		t.Fatal(err)
+func TestProvisionNoAuth(t *testing.T) {
+	var prov util.ProvisionCommand
+	body, _ := json.Marshal(&prov)
+	r, _ := http.NewRequest("PUT", util.GetTweedUrl()+"/b/instances/"+"", bytes.NewReader(body))
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.Provision)
+	handler.ServeHTTP(rr, r)
+	if rr.Code == http.StatusOK {
+		t.Errorf(rr.Body.String())
+		return
 	}
-	r.Header.Add("Content-Type", "application/json")
-	r.URL.Query().Add("instance", "i-f5d7a4d99a0f49/tasks")
+}
+func TestProvisionWithAuth(t *testing.T) {
+	var prov util.ProvisionCommand
+	body, _ := json.Marshal(&prov)
+	r, _ := http.NewRequest("PUT", util.GetTweedUrl()+"/b/instances/"+"", bytes.NewReader(body))
 	r.SetBasicAuth(util.GetUsername(), util.GetPassword())
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(tweed.Bind)
+	handler := http.HandlerFunc(tweed.Provision)
 	handler.ServeHTTP(rr, r)
-	if status := rr.Code; status != http.StatusBadRequest {
-		out := "There was an error with the Bind() in the client---> code" + strconv.FormatInt(int64(status), 10)
-		t.Errorf(out)
+	//check no auth should not be OK!
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf(rr.Body.String())
+		return
+	}
+
+}
+
+func TestProvisionID(t *testing.T) {
+	var prov util.ProvisionCommand
+	prov.ID = "hello"
+	body, _ := json.Marshal(&prov)
+	r, _ := http.NewRequest("PUT", util.GetTweedUrl()+"/b/instances/"+"id", bytes.NewReader(body))
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.Provision)
+	handler.ServeHTTP(rr, r)
+	r.SetBasicAuth(util.GetUsername(), util.GetPassword())
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, r)
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf(rr.Body.String())
 	}
 }
 
-func TestBindWithBody(t *testing.T) {
-	cmd := tweed.BindCommand{
-		ID:     "",
-		NoWait: false,
-		Args: struct {
-			ID string "positional-arg-name:\"instance\" required:\"true\""
-		}{
-			ID: "i-f5d7a4d99a0f49/tasks",
-		},
+func TestProvisionIDServices(t *testing.T) {
+	var prov util.ProvisionCommand
+	prov.ID = "hello"
+	services := []string{"hello", "goodbye"}
+	prov.Args.ServicePlan = services
+	body, _ := json.Marshal(&prov)
+	r, _ := http.NewRequest("PUT", util.GetTweedUrl()+"/b/instances/"+prov.ID, bytes.NewReader(body))
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.Provision)
+	handler.ServeHTTP(rr, r)
+	r.SetBasicAuth(util.GetUsername(), util.GetPassword())
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, r)
+	if rr.Code != http.StatusOK {
+		t.Errorf(rr.Body.String())
 	}
-	var body bytes.Buffer
-	b, _ := json.MarshalIndent(cmd, "", "  ")
-	body.Write(b)
-	r, err := http.NewRequest("GET", util.GetTweedUrl()+"/b/instances", &body)
-	if err != nil {
-		t.Fatal(err)
+}
+
+func TestUnbindNoAuth(t *testing.T) {
+	var a util.UnbindCommand
+	body, _ := json.Marshal(a)
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl()+"/b/instances/"+""+"/bindings/"+"", bytes.NewReader(body))
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.UnBind)
+	handler.ServeHTTP(rr, r)
+	if rr.Code != http.StatusUnauthorized {
+		t.Errorf(rr.Body.String())
 	}
-	r.URL.Query().Add("instance", "i-f5d7a4d99a0f49")
-	r.Header.Add("Content-Type", "application/json")
+}
+func TestUnbindAuth(t *testing.T) {
+	var a util.UnbindCommand
+	body, _ := json.Marshal(a)
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl()+"/b/instances/"+""+"/bindings/"+"", bytes.NewReader(body))
 	r.SetBasicAuth(util.GetUsername(), util.GetPassword())
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(tweed.Bind)
+	handler := http.HandlerFunc(tweed.UnBind)
 	handler.ServeHTTP(rr, r)
-	if status := rr.Code; status != http.StatusOK {
-		out := "There was an error with the Bind() in the client---> code: " + strconv.FormatInt(int64(status), 10)
-		t.Errorf(out)
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf(rr.Body.String())
+	}
+}
+
+func TestUnbindAuthWithInstaceNoBinding(t *testing.T) {
+	var a util.UnbindCommand
+	instance := []string{"hello"}
+	a.Args.InstanceBinding = instance
+	body, _ := json.Marshal(a)
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl()+"/b/instances/"+instance[0]+"/bindings/"+"", bytes.NewReader(body))
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.Provision)
+	handler.ServeHTTP(rr, r)
+	if rr.Code != http.StatusUnauthorized {
+		t.Errorf(rr.Body.String())
+	}
+}
+func TestUnbindAuthWithInstaceBinding(t *testing.T) {
+	var a util.UnbindCommand
+	instancebinding := []string{"hello", "hi"}
+	a.Args.InstanceBinding = instancebinding
+	body, _ := json.Marshal(a)
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl()+"/b/instances/"+instancebinding[0]+"/bindings/"+instancebinding[1], bytes.NewReader(body))
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.Provision)
+	handler.ServeHTTP(rr, r)
+	if rr.Code != http.StatusUnauthorized {
+		t.Errorf(rr.Body.String())
+	}
+}
+
+func TestDeprovisionNoAuth(t *testing.T) {
+	var a util.DeprovisionCommand
+	body, _ := json.Marshal(a)
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl()+"/b/instances/"+"", bytes.NewReader(body))
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.Deprovision)
+	handler.ServeHTTP(rr, r)
+	if rr.Code != http.StatusUnauthorized {
+		t.Errorf(rr.Body.String())
+	}
+}
+
+func TestDeprovisionAuth(t *testing.T) {
+	var a util.DeprovisionCommand
+	body, _ := json.Marshal(a)
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl()+"/b/instances/"+"", bytes.NewReader(body))
+	r.SetBasicAuth(util.GetUsername(), util.GetPassword())
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.Deprovision)
+	handler.ServeHTTP(rr, r)
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf(rr.Body.String())
+	}
+}
+func TestDeprovisionAuthID(t *testing.T) {
+	var a util.DeprovisionCommand
+	instancebinding := []string{"hello"}
+	a.Args.InstanceIds = instancebinding
+	body, _ := json.Marshal(a)
+	r, _ := http.NewRequest("DELETE", util.GetTweedUrl()+"/b/instances/"+a.Args.InstanceIds[0], bytes.NewReader(body))
+	r.SetBasicAuth(util.GetUsername(), util.GetPassword())
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(tweed.Deprovision)
+	handler.ServeHTTP(rr, r)
+	if rr.Code != http.StatusOK {
+		t.Errorf(rr.Body.String())
 	}
 }
