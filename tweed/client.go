@@ -111,7 +111,15 @@ func (c *client) delete(path string, out interface{}) error {
 	return err
 }
 
-func Catalog(w http.ResponseWriter, r *http.Request) {
+func Catalog(username, password, url string) error {
+	c := Connect(url, username, password)
+	var cat tweed.Catalog
+	err := c.get("/b/catalog", &cat)
+	util.JSON(cat)
+	return err
+}
+
+/*func Catalog(w http.ResponseWriter, r *http.Request) {
 	username, password, ok := r.BasicAuth()
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -130,11 +138,15 @@ func Catalog(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(body)
+}*/
+func UnBind(username, password, url string, unbindCmd util.UnbindCommand) api.UnbindResponse {
+	c := Connect(url, username, password)
+	var un api.UnbindResponse
+	c.delete("/b/instances/"+unbindCmd.Args.InstanceBinding[0]+"/bindings/"+unbindCmd.Args.InstanceBinding[1], &un)
+	return un
 }
 
-func CatalogTweeds(w http.ResponseWriter, r *http.Request) {}
-
-func UnBind(w http.ResponseWriter, r *http.Request) {
+/*func UnBind(w http.ResponseWriter, r *http.Request) {
 	username, password, ok := r.BasicAuth()
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -162,7 +174,6 @@ func UnBind(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("There was no Instance and or Binding Id passed in make sure that both are passed in"))
 		return
 	}
-	c.delete("/b/instances/"+in.Args.InstanceBinding[0]+"/bindings/"+in.Args.InstanceBinding[1], &un)
 	util.JSON(un)
 	data, err := json.Marshal(un)
 	if un.Error != "" {
@@ -172,9 +183,16 @@ func UnBind(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(un.Ref))
+}*/
+
+func Bind(username, password, url string, bindCmd util.BindCommand) api.BindResponse {
+	c := Connect(url, username, password)
+	var out api.BindResponse
+	c.put("/b/instances/"+bindCmd.Args.ID+"/bindings/"+bindCmd.ID, nil, &out)
+	return out
 }
 
-func Bind(w http.ResponseWriter, r *http.Request) {
+/*func Bind(w http.ResponseWriter, r *http.Request) {
 	username, password, ok := r.BasicAuth()
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -198,9 +216,16 @@ func Bind(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(out.Ref))
+}*/
+
+func Provision(username, password, url string, provCmd util.ProvisionCommand) api.ProvisionResponse {
+	c := Connect(url, username, password)
+	var out api.ProvisionResponse
+	c.put("/b/instances/"+provCmd.ID, provCmd, &out)
+	return out
 }
 
-func Provision(w http.ResponseWriter, r *http.Request) {
+/*func Provision(w http.ResponseWriter, r *http.Request) {
 	username, password, ok := r.BasicAuth()
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -231,9 +256,16 @@ func Provision(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(out.Ref))
+}*/
+
+func DeProvision(username, password, url string, deprovCmd util.DeprovisionCommand) api.DeprovisionResponse {
+	c := Connect(url, username, password)
+	var out api.DeprovisionResponse
+	c.delete("/b/instances/"+deprovCmd.Args.InstanceIds[0], &out)
+	return out
 }
 
-func Deprovision(w http.ResponseWriter, r *http.Request) {
+/*func Deprovision(w http.ResponseWriter, r *http.Request) {
 	username, password, ok := r.BasicAuth()
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -264,7 +296,4 @@ func Deprovision(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(out.Ref))
 
-}
-func Purge(w http.ResponseWriter, r *http.Request) {
-
-}
+}*/
