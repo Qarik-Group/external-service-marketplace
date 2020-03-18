@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -13,29 +15,6 @@ import (
 type API struct {
 	Config *Config
 	Bind   string
-}
-
-type bind struct {
-	Binding string `json:"as"`
-	ID      string `json:"instance"`
-	NoWait  bool   `json:"no-wait"`
-}
-
-type unbind struct {
-	InstanceBinding []string `json:"instance/binding"`
-	NoWait          bool     `json:"no-wait"`
-}
-
-type provision struct {
-	ID          string   `json:"as"`
-	Params      []string `json:"P"`
-	NoWait      bool     `json:"no-wait"`
-	ServicePlan []string `json:"service/plan"`
-}
-
-type deprovision struct {
-	ID     string `json:"instance"`
-	NoWait bool   `json:"no-wait"`
 }
 
 var config Config
@@ -50,18 +29,30 @@ func catalogFunction(w http.ResponseWriter, r *http.Request) {
 
 }
 func bindFunction(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	instance := vars["instance"]
-	binding := vars["binding"]
+	//vars := mux.Vars(r)
+	//instance := vars["instance"]
+	//binding := vars["binding"]
 	//nowait := vars["nowait"]
+	username := config.ServiceBrokers[0].Username
+	password := config.ServiceBrokers[0].Password
+	url := config.ServiceBrokers[0].URL
 
-	var bind bind
-	bind.ID = instance
-	bind.Binding = binding
-	bindCmd := util.BindCommand
+	var bindCmd util.BindCommand
+	err := json.NewDecoder(r.Body).Decode(&bindCmd)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Error Reading Request Body"))
+		return
+	}
 
-	tweed.Bind(config.ServiceBrokers[0].Username, config.ServiceBrokers[0].Password, config.ServiceBrokers[0].URL, bindCmd)
-	fmt.Fprint(w, "Bound Service")
+	res := tweed.Bind(username, password, url, bindCmd)
+	if res.Error != "" {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(res.Error))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(res.Ref))
 
 }
 
@@ -71,36 +62,76 @@ func unbindFunction(w http.ResponseWriter, r *http.Request) {
 	binding := vars["binding"]
 	//nowait := vars["nowait"]
 
-	var unbind unbind
+	username := config.ServiceBrokers[0].Username
+	password := config.ServiceBrokers[0].Password
+	url := config.ServiceBrokers[0].URL
 
 	instancebinding := make([]string, 2)
 	instancebinding[0] = instance
 	instancebinding[1] = binding
-	unbind.InstanceBinding = instancebinding
-	unbindCmd := util.UnbindCommand
 
-	tweed.UnBind(config.ServiceBrokers[0].Username, config.ServiceBrokers[0].Password, config.ServiceBrokers[0].URL, unbindCmd)
-	fmt.Fprint(w, "Unbound Instance")
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Error Reading Request Body"))
+		return
+	}
+
+	var unbindCmd util.UnbindCommand
+	err = json.Unmarshal(body, &unbindCmd)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Did you use the UnbindCommand struct in util directory when you created your request. Please use that format"))
+		return
+	}
+
+	//unbindCmd.Args.InstanceBinding = instancebinding
+
+	res := tweed.UnBind(username, password, url, unbindCmd)
+	util.JSON(res)
+	data, _ := json.Marshal(res)
+	if res.Error != "" {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write(data)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(res.Ref))
 
 }
 
 func provisionFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	instance := vars["instance"]
+	//instance := vars["instance"]
 	service := vars["service"]
 	plan := vars["plan"]
 	//nowait := vars["nowait"]
+	username := config.ServiceBrokers[0].Username
+	password := config.ServiceBrokers[0].Password
+	url := config.ServiceBrokers[0].URL
 
-	var provision provision
-	provision.ID = instance
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Error Reading Request Body"))
+		return
+	}
+	var provCmd util.ProvisionCommand
 	s := make([]string, 2)
 	s[0] = service
 	s[1] = plan
-	provision.ServicePlan = s
-	provCmd := util.ProvisionCommand
+	json.Unmarshal(body, &provCmd)
 
-	tweed.Provision(config.ServiceBrokers[0].Username, config.ServiceBrokers[0].Password, config.ServiceBrokers[0].URL, provCmd)
-	fmt.Fprint(w, "Provisioned Service")
+	//provCmd.Args.ServicePlan = s
+
+	res := tweed.Provision(username, password, url, provCmd)
+	if res.Error != "" {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Error In Request"))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(res.Ref))
 
 }
 
@@ -108,13 +139,31 @@ func deprovisionFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	instance := vars["instance"]
 	//nowait := vars["nowait"]
+	username := config.ServiceBrokers[0].Username
+	password := config.ServiceBrokers[0].Password
+	url := config.ServiceBrokers[0].URL
 
-	var deprovision deprovision
-	deprovision.ID = instance
-	deprovCmd := util.DeprovisionCommand
+	s := make([]string, 1)
+	s[0] = instance
 
-	tweed.DeProvision(config.ServiceBrokers[0].Username, config.ServiceBrokers[0].Password, config.ServiceBrokers[0].URL, deprovCmd)
-	fmt.Fprint(w, "Deprovisioned Service")
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Error Reading Request Body"))
+		return
+	}
+	var deprovCmd util.DeprovisionCommand
+	//deprovCmd.Args.InstanceIds = instance
+	json.Unmarshal(body, &deprovCmd)
+
+	res := tweed.DeProvision(username, password, url, deprovCmd)
+	if res.Error != "" {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Error In Request"))
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(res.Ref))
 
 }
 
