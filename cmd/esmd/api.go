@@ -1,14 +1,13 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/starkandwayne/external-service-marketplace/tweed"
+	"github.com/starkandwayne/external-service-marketplace/util"
 )
 
 type API struct {
@@ -39,10 +38,17 @@ type deprovision struct {
 	NoWait bool   `json:"no-wait"`
 }
 
+var config Config
+
 func testResponse(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Endpoint Hit")
 }
+func catalogFunction(w http.ResponseWriter, r *http.Request) {
+	//get config service brokers
+	//loop through them
+	//add results to response
 
+}
 func bindFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	instance := vars["instance"]
@@ -52,13 +58,9 @@ func bindFunction(w http.ResponseWriter, r *http.Request) {
 	var bind bind
 	bind.ID = instance
 	bind.Binding = binding
+	bindCmd := util.BindCommand
 
-	bytz := new(bytes.Buffer)
-	json.NewEncoder(bytz).Encode(bind)
-	req, _ := http.NewRequest("PUT", r.Host+r.URL.Path, bytz)
-
-	//tweed.Connect(...,...)?
-	tweed.Bind(w, req)
+	tweed.Bind(config.ServiceBrokers[0].Username, config.ServiceBrokers[0].Password, config.ServiceBrokers[0].URL, bindCmd)
 	fmt.Fprint(w, "Bound Service")
 
 }
@@ -75,13 +77,9 @@ func unbindFunction(w http.ResponseWriter, r *http.Request) {
 	instancebinding[0] = instance
 	instancebinding[1] = binding
 	unbind.InstanceBinding = instancebinding
+	unbindCmd := util.UnbindCommand
 
-	bytz := new(bytes.Buffer)
-	json.NewEncoder(bytz).Encode(unbind)
-	req, _ := http.NewRequest("DELETE", r.Host+r.URL.Path, bytz)
-
-	//tweed.Connect(...,...)?
-	tweed.Bind(w, req)
+	tweed.UnBind(config.ServiceBrokers[0].Username, config.ServiceBrokers[0].Password, config.ServiceBrokers[0].URL, unbindCmd)
 	fmt.Fprint(w, "Unbound Instance")
 
 }
@@ -99,13 +97,9 @@ func provisionFunction(w http.ResponseWriter, r *http.Request) {
 	s[0] = service
 	s[1] = plan
 	provision.ServicePlan = s
+	provCmd := util.ProvisionCommand
 
-	bytz := new(bytes.Buffer)
-	json.NewEncoder(bytz).Encode(provision)
-	req, _ := http.NewRequest("PUT", r.Host+r.URL.Path, bytz)
-
-	//tweed.Connect(...,...)?
-	tweed.Provision(w, req)
+	tweed.Provision(config.ServiceBrokers[0].Username, config.ServiceBrokers[0].Password, config.ServiceBrokers[0].URL, provCmd)
 	fmt.Fprint(w, "Provisioned Service")
 
 }
@@ -117,18 +111,15 @@ func deprovisionFunction(w http.ResponseWriter, r *http.Request) {
 
 	var deprovision deprovision
 	deprovision.ID = instance
+	deprovCmd := util.DeprovisionCommand
 
-	bytz := new(bytes.Buffer)
-	json.NewEncoder(bytz).Encode(deprovision)
-	req, _ := http.NewRequest("DELETE", r.Host+r.URL.Path, bytz)
-
-	//tweed.Connect(...,...)?
-	tweed.Deprovision(w, req)
+	tweed.DeProvision(config.ServiceBrokers[0].Username, config.ServiceBrokers[0].Password, config.ServiceBrokers[0].URL, deprovCmd)
 	fmt.Fprint(w, "Deprovisioned Service")
 
 }
 
 func (api API) Run() {
+	config = *api.Config
 	r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello World"))
@@ -140,7 +131,7 @@ func (api API) Run() {
 	//retrieve a specific cloud
 	r.HandleFunc("/clouds/{cloud}", testResponse)
 	//retrieve all catalogs
-	r.HandleFunc("/catalog", tweed.CatalogTweeds)
+	r.HandleFunc("/catalog", testResponse)
 	//provision a service
 	r.HandleFunc("/provision/{service}/{plan}", provisionFunction)
 	//get an instance
