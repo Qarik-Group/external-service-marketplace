@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -52,11 +53,13 @@ func bindFunction(w http.ResponseWriter, r *http.Request) {
 	bind.ID = instance
 	bind.Binding = binding
 
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewDecoder(r.Body).Decode(&bind)
+	bytz := new(bytes.Buffer)
+	json.NewEncoder(bytz).Encode(bind)
+	req, _ := http.NewRequest("PUT", r.Host+r.URL.Path, bytz)
 
 	//tweed.Connect(...,...)?
-	tweed.Bind(w, r)
+	tweed.Bind(w, req)
+	fmt.Fprint(w, "Bound Service")
 
 }
 
@@ -73,11 +76,13 @@ func unbindFunction(w http.ResponseWriter, r *http.Request) {
 	instancebinding[1] = binding
 	unbind.InstanceBinding = instancebinding
 
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewDecoder(r.Body).Decode(&unbind)
+	bytz := new(bytes.Buffer)
+	json.NewEncoder(bytz).Encode(unbind)
+	req, _ := http.NewRequest("DELETE", r.Host+r.URL.Path, bytz)
 
 	//tweed.Connect(...,...)?
-	tweed.Bind(w, r)
+	tweed.Bind(w, req)
+	fmt.Fprint(w, "Unbound Instance")
 
 }
 
@@ -95,11 +100,13 @@ func provisionFunction(w http.ResponseWriter, r *http.Request) {
 	s[1] = plan
 	provision.ServicePlan = s
 
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewDecoder(r.Body).Decode(&provision)
+	bytz := new(bytes.Buffer)
+	json.NewEncoder(bytz).Encode(provision)
+	req, _ := http.NewRequest("PUT", r.Host+r.URL.Path, bytz)
 
 	//tweed.Connect(...,...)?
-	tweed.Provision(w, r)
+	tweed.Provision(w, req)
+	fmt.Fprint(w, "Provisioned Service")
 
 }
 
@@ -111,11 +118,13 @@ func deprovisionFunction(w http.ResponseWriter, r *http.Request) {
 	var deprovision deprovision
 	deprovision.ID = instance
 
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewDecoder(r.Body).Decode(&deprovision)
+	bytz := new(bytes.Buffer)
+	json.NewEncoder(bytz).Encode(deprovision)
+	req, _ := http.NewRequest("DELETE", r.Host+r.URL.Path, bytz)
 
 	//tweed.Connect(...,...)?
-	tweed.Deprovision(w, r)
+	tweed.Deprovision(w, req)
+	fmt.Fprint(w, "Deprovisioned Service")
 
 }
 
