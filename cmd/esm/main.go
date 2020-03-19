@@ -16,17 +16,30 @@ type Options struct {
 	Catalog struct {
 	} `cli:"catalog"`
 
-	Provision struct {
+	Provision struct {             										  // sub commands to be entered here 
 		Service string `cli:"-s, --service" env:"ESM_SERVICE"`
 		Plan    string `cli:"-p, --plan" env:"ESM_PLAN"`
 	} `cli:"provision"`
+	
 }
 
 func main() {
 	var options Options
 	env.Override(&options)
-	options.Provision.Service = "Subcommand --service to be entered here\n"
-	options.Provision.Plan = "Subcommand --plan to be entered here \n "
+	//options.Provision.Service = "Subcommand --service to be entered here\n"
+	//options.Provision.Plan = "Subcommand --plan to be entered here \n "
+
+
+	// Default options to be entered here 
+
+
+
+
+
+
+
+
+
 	command, args, err := cli.Parse(&options)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{!!! %s}\n", err)
