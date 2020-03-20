@@ -1,13 +1,6 @@
 package tweed
 
-import (
-	fmt "github.com/jhunt/go-ansi"
-	"os"
-
-	"github.com/tweedproject/tweed/api"
-)
-
-func Oops(args []string) {
+/*func Oops(args []string) {
 	GonnaNeedATweed()
 	id := GonnaNeedAnError(args)
 
@@ -26,4 +19,4 @@ func Oops(args []string) {
 	fmt.Printf("dated:    %s\n", out.Dated)
 	fmt.Printf("message:  %s\n", out.Message)
 	fmt.Printf("\n%s\n", out.Request)
-}
+}*/

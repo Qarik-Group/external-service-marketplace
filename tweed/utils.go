@@ -1,11 +1,6 @@
 package tweed
 
-import (
-	fmt "github.com/jhunt/go-ansi"
-	"os"
-)
-
-func bail(err error) {
+/*func bail(err error) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{(error)} %s\n", err)
 		os.Exit(2)
@@ -29,4 +24,4 @@ func GonnaNeedATweed() {
 	if !ok {
 		os.Exit(1)
 	}
-}
+}*/

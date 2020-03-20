@@ -1,13 +1,6 @@
 package tweed
 
-import (
-	fmt "github.com/jhunt/go-ansi"
-	"os"
-
-	"github.com/tweedproject/tweed/api"
-)
-
-func Unbind(args []string) {
+/*func Unbind(args []string) {
 	GonnaNeedATweed()
 	id, bid := GonnaNeedAnInstanceAndABinding(args)
 
@@ -44,4 +37,4 @@ func Unbind(args []string) {
 		fmt.Printf("@R{%s}\n", out.Error)
 		os.Exit(5)
 	}
-}
+}*/

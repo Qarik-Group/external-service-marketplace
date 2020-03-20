@@ -1,13 +1,6 @@
 package tweed
 
-import (
-	fmt "github.com/jhunt/go-ansi"
-	"os"
-
-	"github.com/tweedproject/tweed/api"
-)
-
-func Deprovision(args []string) {
+/*func Deprovision(args []string) {
 	GonnaNeedATweed()
 	ids := GonnaNeedAtLeastOneInstance(args)
 	c := Connect(opts.Tweed, opts.Username, opts.Password)
@@ -63,4 +56,4 @@ func deprovision1(c *client, id string) int {
 
 	fmt.Printf("@R{%s}\n", out.Error)
 	return 5
-}
+}*/

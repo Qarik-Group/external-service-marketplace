@@ -1,11 +1,6 @@
 package tweed
 
-import (
-	fmt "github.com/jhunt/go-ansi"
-	"os"
-)
-
-func Reset(args []string) {
+/*func Reset(args []string) {
 	GonnaNeedATweed()
 
 	switch opts.Reset.State {
@@ -32,4 +27,4 @@ func Reset(args []string) {
 	id := GonnaNeedAnInstance(args)
 	c := Connect(opts.Tweed, opts.Username, opts.Password)
 	c.PUT("/b/instances/"+id+"/state/"+opts.Reset.State, nil, nil)
-}
+}*/

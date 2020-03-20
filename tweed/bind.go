@@ -1,14 +1,6 @@
 package tweed
 
-import (
-	fmt "github.com/jhunt/go-ansi"
-	"os"
-
-	"github.com/tweedproject/tweed/api"
-	"github.com/tweedproject/tweed/random"
-)
-
-func Bind(args []string) {
+/*func Bind(args []string) {
 	GonnaNeedATweed()
 	id := GonnaNeedAnInstance(args)
 
@@ -54,4 +46,4 @@ func Bind(args []string) {
 		fmt.Printf("@R{%s}\n", out.Error)
 		os.Exit(5)
 	}
-}
+}*/

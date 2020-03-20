@@ -3,13 +3,12 @@ package tweed
 import (
 	"bytes"
 	"encoding/json"
-	fmt "github.com/jhunt/go-ansi"
 	"io/ioutil"
 	"net/http"
-	"net/http/httputil"
-	"os"
 	"strings"
 
+	"github.com/starkandwayne/external-service-marketplace/util"
+	"github.com/tweedproject/tweed"
 	"github.com/tweedproject/tweed/api"
 )
 
@@ -34,28 +33,11 @@ func Connect(url, username, password string) *client {
 
 func (c *client) do(req *http.Request, out interface{}) (*http.Response, error) {
 	req.SetBasicAuth(c.username, c.password)
-	if opts.Debug {
-		b, err := httputil.DumpRequest(req, true)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "DEBUG: @W{unable to dump request:} @R{%s}\n", err)
-		} else {
-			fmt.Fprintf(os.Stderr, "%s\n\n", string(b))
-		}
-	}
 	res, err := c.http.Do(req)
-	if res != nil && opts.Debug {
-		b, err := httputil.DumpResponse(res, true)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "DEBUG: @W{unable to dump response:} @R{%s}\n", err)
-		} else {
-			fmt.Fprintf(os.Stderr, "%s\n\n", string(b))
-		}
-	}
 	if err != nil || out == nil {
 		return res, err
 	}
 	defer res.Body.Close()
-
 	b, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return res, err
@@ -81,13 +63,10 @@ func (c *client) request(method, path string, in interface{}) (*http.Request, er
 		}
 		body.Write(b)
 	}
-
-	path = strings.TrimPrefix(path, "/")
-	req, err := http.NewRequest(method, c.url+"/"+path, &body)
+	req, err := http.NewRequest(method, c.url+path, &body)
 	if err != nil {
 		return nil, err
 	}
-
 	req.Header.Add("Accept", "application/json")
 	if in != nil {
 		req.Header.Add("Content-Type", "application/json")
@@ -96,7 +75,7 @@ func (c *client) request(method, path string, in interface{}) (*http.Request, er
 	return req, nil
 }
 
-func (c *client) GET(path string, out interface{}) error {
+func (c *client) get(path string, out interface{}) error {
 	req, err := c.request("GET", path, nil)
 	if err != nil {
 		return err
@@ -105,7 +84,7 @@ func (c *client) GET(path string, out interface{}) error {
 	return err
 }
 
-func (c *client) POST(path string, in, out interface{}) error {
+func (c *client) post(path string, in, out interface{}) error {
 	req, err := c.request("POST", path, in)
 	if err != nil {
 		return err
@@ -114,7 +93,7 @@ func (c *client) POST(path string, in, out interface{}) error {
 	return err
 }
 
-func (c *client) PUT(path string, in, out interface{}) error {
+func (c *client) put(path string, in, out interface{}) error {
 	req, err := c.request("PUT", path, in)
 	if err != nil {
 		return err
@@ -123,11 +102,47 @@ func (c *client) PUT(path string, in, out interface{}) error {
 	return err
 }
 
-func (c *client) DELETE(path string, out interface{}) error {
+func (c *client) delete(path string, out interface{}) error {
 	req, err := c.request("DELETE", path, nil)
 	if err != nil {
 		return err
 	}
 	_, err = c.do(req, out)
 	return err
+}
+
+func Catalog(username, password, url string) error {
+	c := Connect(url, username, password)
+	var cat tweed.Catalog
+	err := c.get("/b/catalog", &cat)
+	util.JSON(cat)
+	return err
+}
+
+func UnBind(username, password, url string, unbindCmd util.UnbindCommand) api.UnbindResponse {
+	c := Connect(url, username, password)
+	var un api.UnbindResponse
+	c.delete("/b/instances/"+unbindCmd.Args.InstanceBinding[0]+"/bindings/"+unbindCmd.Args.InstanceBinding[1], &un)
+	return un
+}
+
+func Bind(username, password, url string, bindCmd util.BindCommand) api.BindResponse {
+	c := Connect(url, username, password)
+	var out api.BindResponse
+	c.put("/b/instances/"+bindCmd.Args.ID+"/bindings/"+bindCmd.ID, nil, &out)
+	return out
+}
+
+func Provision(username, password, url string, provCmd util.ProvisionCommand) api.ProvisionResponse {
+	c := Connect(url, username, password)
+	var out api.ProvisionResponse
+	c.put("/b/instances/"+provCmd.ID, provCmd, &out)
+	return out
+}
+
+func DeProvision(username, password, url string, deprovCmd util.DeprovisionCommand) api.DeprovisionResponse {
+	c := Connect(url, username, password)
+	var out api.DeprovisionResponse
+	c.delete("/b/instances/"+deprovCmd.Args.InstanceIds[0], &out)
+	return out
 }

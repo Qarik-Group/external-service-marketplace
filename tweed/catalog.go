@@ -1,16 +1,6 @@
 package tweed
 
-import (
-	fmt "github.com/jhunt/go-ansi"
-	"os"
-	"strings"
-
-	"github.com/jhunt/go-table"
-
-	"github.com/tweedproject/tweed"
-)
-
-func Catalog(args []string) {
+/*func Catalog(args []string) {
 	GonnaNeedATweed()
 	DontWantNoArgs(args)
 
@@ -52,4 +42,4 @@ func Catalog(args []string) {
 		}
 	}
 	tbl.Output(os.Stdout)
-}
+}*/

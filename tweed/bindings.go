@@ -1,16 +1,6 @@
 package tweed
 
-import (
-	"encoding/json"
-	fmt "github.com/jhunt/go-ansi"
-	"os"
-
-	"github.com/jhunt/go-table"
-
-	"github.com/tweedproject/tweed/api"
-)
-
-func Bindings(args []string) {
+/*func Bindings(args []string) {
 	GonnaNeedATweed()
 	id := GonnaNeedAnInstance(args)
 
@@ -33,4 +23,4 @@ func Bindings(args []string) {
 		}
 	}
 	tbl.Output(os.Stdout)
-}
+}*/

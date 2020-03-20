@@ -1,11 +1,6 @@
 package tweed
 
-import (
-	fmt "github.com/jhunt/go-ansi"
-	"os"
-)
-
-func Wait(args []string) {
+/*func Wait(args []string) {
 	GonnaNeedATweed()
 
 	if !opts.Wait.Task && !opts.Wait.Instance {
@@ -77,4 +72,4 @@ func Wait(args []string) {
 			os.Exit(5)
 		}
 	}
-}
+}*/

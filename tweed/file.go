@@ -1,13 +1,6 @@
 package tweed
 
-import (
-	fmt "github.com/jhunt/go-ansi"
-	"os"
-
-	"github.com/tweedproject/tweed/api"
-)
-
-func File(args []string) {
+/*func File(args []string) {
 	GonnaNeedATweed()
 	id, name := GonnaNeedAnInstanceAndAFile(args)
 
@@ -27,4 +20,4 @@ func File(args []string) {
 		}
 	}
 	fmt.Fprintf(os.Stderr, "@R{%s}: file not found\n", name)
-}
+}*/

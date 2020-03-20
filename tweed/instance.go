@@ -1,14 +1,6 @@
 package tweed
 
-import (
-	"encoding/json"
-	fmt "github.com/jhunt/go-ansi"
-	"os"
-
-	"github.com/tweedproject/tweed/api"
-)
-
-func Instance(args []string) {
+/*func Instance(args []string) {
 	GonnaNeedATweed()
 	id := GonnaNeedAnInstance(args)
 
@@ -49,4 +41,4 @@ func Instance(args []string) {
 			fmt.Printf("\n")
 		}
 	}
-}
+}*/
