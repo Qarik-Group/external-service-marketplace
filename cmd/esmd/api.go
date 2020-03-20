@@ -193,7 +193,7 @@ func (api API) Run() {
 	//retrieve a specific cloud
 	r.HandleFunc("/clouds/{cloud}", testResponse)
 	//retrieve all catalogs
-	r.HandleFunc("/catalog", testResponse)
+	r.HandleFunc("/catalog", catalogFunction)
 	//provision a service
 	r.HandleFunc("/provision/{service}/{plan}", provisionFunction)
 	//get an instance
