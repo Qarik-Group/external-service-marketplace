@@ -27,6 +27,13 @@ func catalogFunction(w http.ResponseWriter, r *http.Request) {
 	//get config service brokers
 	//loop through them
 	//add results to response
+	username, password, _ := r.BasicAuth()
+
+	res := tweed.Catalog(username, password, url)
+	body, _ := json.Marshal(res)
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(body)
 
 }
 func bindFunction(w http.ResponseWriter, r *http.Request) {
