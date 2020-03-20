@@ -168,7 +168,7 @@ func deprovisionFunction(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api API) Run() {
-	config = *api.Config
+	//config = *api.Config
 	r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello World"))
