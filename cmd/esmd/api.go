@@ -180,7 +180,7 @@ func deprovisionFunction(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api API) Run() {
-	config = *api.Config
+	//config = *api.Config
 	url = "http://10.128.32.138:31666"
 	r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
