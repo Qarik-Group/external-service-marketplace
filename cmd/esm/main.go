@@ -1,16 +1,16 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
 	"os"
-	"github.com/tweedproject/tweed"
-	"github.com/starkandwayne/external-service-marketplace/util"
+
 	fmt "github.com/jhunt/go-ansi"
 	"github.com/jhunt/go-cli"
 	env "github.com/jhunt/go-envirotron"
-	"io/ioutil"
-	"net/http"
-	"bytes"
-	"encoding/json"
+	"github.com/starkandwayne/external-service-marketplace/util"
+	"github.com/tweedproject/tweed"
 )
 
 type Options struct {
@@ -21,11 +21,10 @@ type Options struct {
 	Catalog struct {
 	} `cli:"catalog"`
 
-	Provision struct {             										  // sub commands to be entered here 
+	Provision struct { // sub commands to be entered here
 		Service string `cli:"-s, --service" env:"ESM_SERVICE"`
 		Plan    string `cli:"-p, --plan" env:"ESM_PLAN"`
 	} `cli:"provision"`
-	
 }
 
 func main() {
@@ -36,26 +35,28 @@ func main() {
 	command, args, err := cli.Parse(&options)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{!!! %s}\n", err)
-	} 
+	}
 	if command == "catalog" {
 		var cat tweed.Catalog
-		r, _ := http.NewRequest("GET", "http://localhost:8081/catalog", nil)
-		req, err := http.DefaultClient.Do(r)
+		req, _ := http.NewRequest("GET", "http://localhost:8081/catalog", nil)
+		req.Header.Set("Content-Type", "application/json")
+		//req, err := http.DefaultClient.Do(r)
 		if err != nil {
-
+			fmt.Printf("Error: not sent")
 		}
+		defer req.Body.Close()
 		body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
-		}	
-		b := bytes.NewReader(body)
-		json.NewDecoder(b).Decode(cat)
+			fmt.Printf("Error: body not read")
+		}
+		json.Unmarshal(body, &cat)
 		util.JSON(cat)
 		fmt.Printf("List services \n")
 		fmt.Printf("running command @G{%s}...\n", command)
 		fmt.Printf("with arguments @C{%v}...\n", args)
 	}
 
-	if command == "provision"{
+	if command == "provision" {
 		fmt.Printf("Provisioning... %s  %s", options.Provision.Service, options.Provision.Plan)
 	}
 }
