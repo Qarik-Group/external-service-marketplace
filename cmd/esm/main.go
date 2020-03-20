@@ -1,8 +1,8 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -28,6 +28,7 @@ type Options struct {
 }
 
 func main() {
+
 	var options Options
 	env.Override(&options)
 	options.Provision.Service = "Subcommand --service to be entered here\n"
@@ -36,20 +37,29 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{!!! %s}\n", err)
 	}
+
 	if command == "catalog" {
 		var cat tweed.Catalog
-		req, _ := http.NewRequest("GET", "http://localhost:8081/catalog", nil)
-		req.Header.Set("Content-Type", "application/json")
+		//r, _ := http.NewRequest("GET", "http://localhost:8081/catalog", nil)
+		//r, err := http.Get("http://localhost:8081/catalog")
+		//r.Header.Set("Content-Type", "application/json")
 		//req, err := http.DefaultClient.Do(r)
+		username := "tweed"
+		passwd := "tweed"
+		client := &http.Client{}
+		req, err := http.NewRequest("GET", "http://localhost:8081/catalog", nil)
+		req.SetBasicAuth(username, passwd)
+		resp, err := client.Do(req)
 		if err != nil {
 			fmt.Printf("Error: not sent")
 		}
-		defer req.Body.Close()
-		body, err := ioutil.ReadAll(req.Body)
+		//defer req.Body.Close()
+		//body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
 			fmt.Printf("Error: body not read")
 		}
-		json.Unmarshal(body, &cat)
+		json.NewDecoder(resp.Body).Decode(&cat)
+		//json.Unmarshal(body, &cat)
 		util.JSON(cat)
 		fmt.Printf("List services \n")
 		fmt.Printf("running command @G{%s}...\n", command)
@@ -57,6 +67,31 @@ func main() {
 	}
 
 	if command == "provision" {
+
+		var prov util.ProvisionCommand
+		s := make([]string, 1)
+		s[0] = "Redis"
+		prov.Args.ServicePlan = s
+		sp, _ := json.Marshal(prov)
+		r := bytes.NewReader(sp)
+		username := "tweed"
+		passwd := "tweed"
+		client := &http.Client{}
+		req, err := http.NewRequest("GET", "http://localhost:8081/provision", r)
+		req.SetBasicAuth(username, passwd)
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Printf("Error: not sent")
+		}
+		//defer req.Body.Close()
+		//body, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			fmt.Printf("Error: body not read")
+		}
+		json.NewDecoder(resp.Body).Decode(&prov)
+		//json.Unmarshal(body, &cat)
+		util.JSON(prov)
+
 		fmt.Printf("Provisioning... %s  %s", options.Provision.Service, options.Provision.Plan)
 	}
 }
