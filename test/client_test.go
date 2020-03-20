@@ -6,14 +6,6 @@ import (
 	"github.com/starkandwayne/external-service-marketplace/tweed"
 	"github.com/starkandwayne/external-service-marketplace/util"
 )
-
-func TestCatalog(t *testing.T) {
-	err := tweed.Catalog("tweed", "tweed", "http://10.128.32.138:31666")
-	if err != nil {
-		t.Errorf("There was some kind of " + "\n" + err.Error())
-	}
-}
-
 func TestUnBind(t *testing.T) {
 	var unbindCmd util.UnbindCommand
 	ids := []string{"hi", "hello"}
