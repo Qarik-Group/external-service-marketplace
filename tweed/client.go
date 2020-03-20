@@ -112,11 +112,11 @@ func (c *client) delete(path string, out interface{}) error {
 }
 
 func Catalog(username, password, url string) tweed.Catalog {
-    c := Connect(url, username, password)
-    var cat tweed.Catalog
-    c.get("/b/catalog", &cat)
-    util.JSON(cat)
-    return cat
+	c := Connect(url, username, password)
+	var cat tweed.Catalog
+	c.get("/b/catalog", &cat)
+	util.JSON(cat)
+	return cat
 }
 
 func UnBind(username, password, url string, unbindCmd util.UnbindCommand) api.UnbindResponse {

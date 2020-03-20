@@ -18,6 +18,7 @@ type API struct {
 }
 
 var config Config
+var url string
 
 func testResponse(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Endpoint Hit")
@@ -26,6 +27,13 @@ func catalogFunction(w http.ResponseWriter, r *http.Request) {
 	//get config service brokers
 	//loop through them
 	//add results to response
+	username, password, _ := r.BasicAuth()
+
+	res := tweed.Catalog(username, password, url)
+	body, _ := json.Marshal(res)
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(body)
 
 }
 func bindFunction(w http.ResponseWriter, r *http.Request) {
@@ -33,9 +41,10 @@ func bindFunction(w http.ResponseWriter, r *http.Request) {
 	//instance := vars["instance"]
 	//binding := vars["binding"]
 	//nowait := vars["nowait"]
-	username := config.ServiceBrokers[0].Username
+	/*username := config.ServiceBrokers[0].Username
 	password := config.ServiceBrokers[0].Password
-	url := config.ServiceBrokers[0].URL
+	url := config.ServiceBrokers[0].URL */
+	username, password, _ := r.BasicAuth()
 
 	var bindCmd util.BindCommand
 	err := json.NewDecoder(r.Body).Decode(&bindCmd)
@@ -62,9 +71,10 @@ func unbindFunction(w http.ResponseWriter, r *http.Request) {
 	binding := vars["binding"]
 	//nowait := vars["nowait"]
 
-	username := config.ServiceBrokers[0].Username
+	/*username := config.ServiceBrokers[0].Username
 	password := config.ServiceBrokers[0].Password
-	url := config.ServiceBrokers[0].URL
+	url := config.ServiceBrokers[0].URL*/
+	username, password, _ := r.BasicAuth()
 
 	instancebinding := make([]string, 2)
 	instancebinding[0] = instance
@@ -106,9 +116,10 @@ func provisionFunction(w http.ResponseWriter, r *http.Request) {
 	service := vars["service"]
 	plan := vars["plan"]
 	//nowait := vars["nowait"]
-	username := config.ServiceBrokers[0].Username
+	/*username := config.ServiceBrokers[0].Username
 	password := config.ServiceBrokers[0].Password
-	url := config.ServiceBrokers[0].URL
+	url := config.ServiceBrokers[0].URL*/
+	username, password, _ := r.BasicAuth()
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -139,9 +150,10 @@ func deprovisionFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	instance := vars["instance"]
 	//nowait := vars["nowait"]
-	username := config.ServiceBrokers[0].Username
+	/*username := config.ServiceBrokers[0].Username
 	password := config.ServiceBrokers[0].Password
-	url := config.ServiceBrokers[0].URL
+	url := config.ServiceBrokers[0].URL*/
+	username, password, _ := r.BasicAuth()
 
 	s := make([]string, 1)
 	s[0] = instance
@@ -169,6 +181,7 @@ func deprovisionFunction(w http.ResponseWriter, r *http.Request) {
 
 func (api API) Run() {
 	//config = *api.Config
+	url = "http://10.128.32.138:31666"
 	r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello World"))
@@ -180,7 +193,7 @@ func (api API) Run() {
 	//retrieve a specific cloud
 	r.HandleFunc("/clouds/{cloud}", testResponse)
 	//retrieve all catalogs
-	r.HandleFunc("/catalog", testResponse)
+	r.HandleFunc("/catalog", catalogFunction)
 	//provision a service
 	r.HandleFunc("/provision/{service}/{plan}", provisionFunction)
 	//get an instance
