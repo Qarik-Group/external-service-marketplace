@@ -10,4 +10,5 @@ require (
 	github.com/jhunt/go-table v0.0.0-20181127210244-68a841ca53dc
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/tweedproject/tweed v0.0.0-20200205200343-1c1696590f05
+	gopkg.in/yaml.v2 v2.2.8
 )

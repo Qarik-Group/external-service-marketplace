@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/starkandwayne/external-service-marketplace/tweed"
@@ -17,7 +18,7 @@ type API struct {
 	Bind   string
 }
 
-var config Config
+var config *Config
 var url string
 
 func testResponse(w http.ResponseWriter, r *http.Request) {
@@ -37,14 +38,15 @@ func catalogFunction(w http.ResponseWriter, r *http.Request) {
 
 }
 func bindFunction(w http.ResponseWriter, r *http.Request) {
-	//vars := mux.Vars(r)
+	vars := mux.Vars(r)
+	tweedIndex, _ := strconv.Atoi(vars["tweed"])
 	//instance := vars["instance"]
 	//binding := vars["binding"]
 	//nowait := vars["nowait"]
-	/*username := config.ServiceBrokers[0].Username
-	password := config.ServiceBrokers[0].Password
-	url := config.ServiceBrokers[0].URL */
-	username, password, _ := r.BasicAuth()
+	username := config.ServiceBrokers[tweedIndex].Username
+	password := config.ServiceBrokers[tweedIndex].Password
+	url := config.ServiceBrokers[tweedIndex].URL
+	//username, password, _ := r.BasicAuth()
 
 	var bindCmd util.BindCommand
 	err := json.NewDecoder(r.Body).Decode(&bindCmd)
@@ -69,12 +71,13 @@ func unbindFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	instance := vars["instance"]
 	binding := vars["binding"]
+	tweedIndex, _ := strconv.Atoi(vars["tweed"])
 	//nowait := vars["nowait"]
 
-	/*username := config.ServiceBrokers[0].Username
-	password := config.ServiceBrokers[0].Password
-	url := config.ServiceBrokers[0].URL*/
-	username, password, _ := r.BasicAuth()
+	username := config.ServiceBrokers[tweedIndex].Username
+	password := config.ServiceBrokers[tweedIndex].Password
+	url := config.ServiceBrokers[tweedIndex].URL
+	//username, password, _ := r.BasicAuth()
 
 	instancebinding := make([]string, 2)
 	instancebinding[0] = instance
@@ -112,14 +115,15 @@ func unbindFunction(w http.ResponseWriter, r *http.Request) {
 
 func provisionFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	tweedIndex, _ := strconv.Atoi(vars["tweed"])
 	//instance := vars["instance"]
 	service := vars["service"]
 	plan := vars["plan"]
 	//nowait := vars["nowait"]
-	/*username := config.ServiceBrokers[0].Username
-	password := config.ServiceBrokers[0].Password
-	url := config.ServiceBrokers[0].URL*/
-	username, password, _ := r.BasicAuth()
+	username := config.ServiceBrokers[tweedIndex].Username
+	password := config.ServiceBrokers[tweedIndex].Password
+	url := config.ServiceBrokers[tweedIndex].URL
+	//username, password, _ := r.BasicAuth()
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -149,11 +153,12 @@ func provisionFunction(w http.ResponseWriter, r *http.Request) {
 func deprovisionFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	instance := vars["instance"]
+	tweedIndex, _ := strconv.Atoi(vars["tweed"])
 	//nowait := vars["nowait"]
-	/*username := config.ServiceBrokers[0].Username
-	password := config.ServiceBrokers[0].Password
-	url := config.ServiceBrokers[0].URL*/
-	username, password, _ := r.BasicAuth()
+	username := config.ServiceBrokers[tweedIndex].Username
+	password := config.ServiceBrokers[tweedIndex].Password
+	url := config.ServiceBrokers[tweedIndex].URL
+	//username, password, _ := r.BasicAuth()
 
 	s := make([]string, 1)
 	s[0] = instance
@@ -180,8 +185,8 @@ func deprovisionFunction(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api API) Run() {
-	//config = *api.Config
-	url = "http://10.128.32.138:31666"
+	config = api.Config
+	//url = "http://10.128.32.138:31666"
 	r := mux.NewRouter()
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello World"))
@@ -193,19 +198,19 @@ func (api API) Run() {
 	//retrieve a specific cloud
 	r.HandleFunc("/clouds/{cloud}", testResponse)
 	//retrieve all catalogs
-	r.HandleFunc("/catalog", catalogFunction)
+	r.HandleFunc("/catalog/{tweed}", catalogFunction)
 	//provision a service
-	r.HandleFunc("/provision/{service}/{plan}", provisionFunction)
+	r.HandleFunc("/provision/{tweed}/{service}/{plan}", provisionFunction)
 	//get an instance
-	r.HandleFunc("/instances/{instance}", testResponse)
+	r.HandleFunc("/instances/{tweed}/{instance}", testResponse)
 	//deprovision an instance
-	r.HandleFunc("/deprovision/{instance}", deprovisionFunction)
+	r.HandleFunc("/deprovision/{tweed}/{instance}", deprovisionFunction)
 	//bind an instance
-	r.HandleFunc("/bind/{instance}/{binding}/{nowait}", bindFunction)
+	r.HandleFunc("/bind/{tweed}/{instance}/{binding}/{nowait}", bindFunction)
 	//retrieve binding
-	r.HandleFunc("/getbinding/{instance}", testResponse)
+	r.HandleFunc("/getbinding/{tweed}/{instance}", testResponse)
 	//unbind an instance
-	r.HandleFunc("/unbind/{instance}", unbindFunction)
+	r.HandleFunc("/unbind/{tweed}/{instance}", unbindFunction)
 
 	//start the server
 	log.Fatal(http.ListenAndServe(":8081", r))
