@@ -206,7 +206,6 @@ func (api API) Run() {
 	r.HandleFunc("/getbinding/{instance}", testResponse)
 	//unbind an instance
 	r.HandleFunc("/unbind/{instance}", unbindFunction)
-
 	//start the server
 	log.Fatal(http.ListenAndServe(":8081", r))
 }
