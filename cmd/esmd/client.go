@@ -8,15 +8,15 @@ type UniqueServices struct {
 	services map[string]tweed.Service
 }
 
-//Constructor for UniqueServices map
-func NewUniqueServices() *UniqueServices {
+func newUniqueServices() *UniqueServices {
 	us := UniqueServices{}
 	us.services = make(map[string]tweed.Service)
 	return &us
 }
 
 //Populates map with unique Services found in the config passed
-func (us UniqueServices) EsmCatalog(config Config) {
+func EsmCatalog(config Config) *UniqueServices {
+	us := newUniqueServices()
 	for i := 0; i < len(config.ServiceBrokers); i++ {
 		broker := config.ServiceBrokers[i]
 		cat := tweed.Catalog(broker.Username, broker.Password, broker.URL)
@@ -26,7 +26,11 @@ func (us UniqueServices) EsmCatalog(config Config) {
 			}
 		}
 	}
-	for _, val := range us.services {
-		tweed.JSON(val)
+	return us
+}
+
+func PrintUniqueServices(us UniqueServices) {
+	for k, _ := range us.services {
+		tweed.JSON(us.services[k])
 	}
 }
