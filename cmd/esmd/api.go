@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/starkandwayne/external-service-marketplace/tweed"
@@ -49,7 +48,7 @@ func catalogFunction(w http.ResponseWriter, r *http.Request) {
 }
 func bindFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	tweedIndex, _ := strconv.Atoi(vars["tweed"])
+	tweedIndex := findTweed(vars["tweed"])
 	//instance := vars["instance"]
 	//binding := vars["binding"]
 	//nowait := vars["nowait"]
@@ -81,7 +80,7 @@ func unbindFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	instance := vars["instance"]
 	binding := vars["binding"]
-	tweedIndex, _ := strconv.Atoi(vars["tweed"])
+	tweedIndex := findTweed(vars["tweed"])
 	//nowait := vars["nowait"]
 
 	username := config.ServiceBrokers[tweedIndex].Username
@@ -125,7 +124,7 @@ func unbindFunction(w http.ResponseWriter, r *http.Request) {
 
 func provisionFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	tweedIndex, _ := strconv.Atoi(vars["tweed"])
+	tweedIndex := findTweed(vars["tweed"])
 	//instance := vars["instance"]
 	service := vars["service"]
 	plan := vars["plan"]
@@ -163,7 +162,7 @@ func provisionFunction(w http.ResponseWriter, r *http.Request) {
 func deprovisionFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	instance := vars["instance"]
-	tweedIndex, _ := strconv.Atoi(vars["tweed"])
+	tweedIndex := findTweed(vars["tweed"])
 	//nowait := vars["nowait"]
 	username := config.ServiceBrokers[tweedIndex].Username
 	password := config.ServiceBrokers[tweedIndex].Password

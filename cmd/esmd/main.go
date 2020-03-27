@@ -19,7 +19,7 @@ type Options struct {
 
 func main() {
 	var options Options
-	options.Config = "/etc/esm/esmd.yml"
+	options.Config = "/cmd/esm/esmd.yml" //need to change this
 	env.Override(&options)
 	command, args, err := cli.Parse(&options)
 
