@@ -21,6 +21,16 @@ type API struct {
 var config *Config
 var url string
 
+func findTweed(tweedname string) int {
+	brokers := config.ServiceBrokers
+
+	for i := 0; i < len(brokers); i++ {
+		if tweedname == brokers[i].Prefix {
+			return i
+		}
+	}
+	return -1
+}
 func testResponse(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Endpoint Hit")
 }
