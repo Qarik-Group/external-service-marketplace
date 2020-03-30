@@ -37,7 +37,12 @@ func catalogFunction(w http.ResponseWriter, r *http.Request) {
 	//get config service brokers
 	//loop through them
 	//add results to response
-	username, password, _ := r.BasicAuth()
+	vars := mux.Vars(r)
+	tweedIndex := findTweed(vars["tweed"])
+	username := config.ServiceBrokers[tweedIndex].Username
+	password := config.ServiceBrokers[tweedIndex].Password
+	url := config.ServiceBrokers[tweedIndex].URL
+	fmt.Println("user: "+username, "password: "+password, "url: "+url)
 
 	res := tweed.Catalog(username, password, url)
 	body, _ := json.Marshal(res)
@@ -201,7 +206,7 @@ func (api API) Run() {
 		w.Write([]byte("Hello World"))
 	})
 	//register broker
-	r.HandleFunc("/reigster/{broker}", testResponse)
+	r.HandleFunc("/register/{broker}", testResponse)
 	//retrieve clouds
 	r.HandleFunc("/clouds", testResponse)
 	//retrieve a specific cloud
