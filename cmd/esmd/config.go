@@ -4,16 +4,22 @@ import (
 	"io/ioutil"
 
 	"gopkg.in/yaml.v2"
+
+	"github.com/starkandwayne/external-service-marketplace/tweed"
 )
 
+type ServiceBroker struct {
+	Prefix     string `yaml:"prefix"`
+	URL        string `yaml:"url"`
+	Username   string `yaml:"username"`
+	Password   string `yaml:"password"`
+	SkipVerify bool   `yaml:"skip-verify"`
+
+	Backend tweed.Client `yaml:"-"`
+}
+
 type Config struct {
-	ServiceBrokers []struct {
-		Prefix     string `yaml:"prefix"`
-		URL        string `yaml:"url"`
-		Username   string `yaml:"username"`
-		Password   string `yaml:"password"`
-		SkipVerify bool   `yaml:"skip-verify"`
-	} `yaml:"service-brokers"`
+	ServiceBrokers []ServiceBroker `yaml:"service-brokers"`
 
 	Clouds []struct {
 		ID   string `yaml:"id"`
@@ -35,5 +41,18 @@ func ReadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 
+	for i, b := range c.ServiceBrokers {
+		c.ServicesBrokers[i].Backend = tweed.NewClient(b.Username, b.Password, b.URL)
+	}
+
 	return c, err
+}
+
+func (c Config) Broker(prefix string) (ServiceBroker, bool) {
+	for _, broker := range c.ServiceBrokers {
+		if broker.Prefix == prefix {
+			return broker, true
+		}
+	}
+	return ServiceBroker{}, false
 }

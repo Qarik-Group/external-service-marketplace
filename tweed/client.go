@@ -12,18 +12,18 @@ import (
 	"github.com/tweedproject/tweed/api"
 )
 
-type client struct {
+type Client struct {
 	http     *http.Client
 	url      string
 	username string
 	password string
 }
 
-func Connect(url, username, password string) *client {
+func NewClient(url, username, password string) Client {
 	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
 		url = "https://" + url
 	}
-	return &client{
+	return Client{
 		url:      strings.TrimSuffix(url, "/"),
 		username: username,
 		password: password,

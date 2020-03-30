@@ -6,15 +6,62 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/starkandwayne/external-service-marketplace/tweed"
 	"github.com/starkandwayne/external-service-marketplace/util"
+
+	realtweed "github.com/tweedproject/tweed"
 )
+
+type Catalog struct {
+	realtweed.Catalog
+}
+
+func (c *Catalog) Merge(prefix string, other realtweed.Catalog) {
+	for _, svc := range other.Services {
+		svc.ID = fmt.Sprintf("%s--%s", prefix, svc.ID)
+		svc.Name = fmt.Sprintf("[%s] %s", prefix, svc.Name)
+		c.Services = append(c.Services, svc)
+	}
+}
 
 type API struct {
 	Config *Config
 	Bind   string
+}
+
+func (a *API) Catalog() (Catalog, error) {
+	c := Catalog{}
+
+	for _, broker := range a.Config.ServiceBrokers {
+		cat := tweed.Catalog(broker.Username, broker.Password, broker.URL)
+		c.Merge(broker.Prefix, cat)
+	}
+
+	return c, nil
+}
+
+func (a *API) Provision(prefix, service, plan string) (string, error) {
+	fmt.Printf("PROVISIONING [%s][%s][%s]\n", prefix, service, plan)
+
+	broker, found := a.Config.Broker(prefix)
+	if !found {
+		return "", fmt.Errorf("no such broker '%s'", prefix)
+	}
+
+	fmt.Printf("PROVISIONING against tweed at %s (u:%s, p:%s)\n", broker.URL, broker.Username, broker.Password)
+	// This is where we dispatch off to the actual broker.
+
+	// in James' ideal world, here's what we do
+	instance, err := broker.Backend.Provision(service, plan)
+	if err != nil {
+		return "", err
+	}
+
+	return instance.ID, nil
 }
 
 var config *Config
@@ -32,24 +79,6 @@ func findTweed(tweedname string) int {
 }
 func testResponse(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Endpoint Hit")
-}
-func catalogFunction(w http.ResponseWriter, r *http.Request) {
-	//get config service brokers
-	//loop through them
-	//add results to response
-	vars := mux.Vars(r)
-	tweedIndex := findTweed(vars["tweed"])
-	username := config.ServiceBrokers[tweedIndex].Username
-	password := config.ServiceBrokers[tweedIndex].Password
-	url := config.ServiceBrokers[tweedIndex].URL
-	fmt.Println("user: "+username, "password: "+password, "url: "+url)
-
-	res := tweed.Catalog(username, password, url)
-	body, _ := json.Marshal(res)
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(body)
-
 }
 func bindFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -211,21 +240,59 @@ func (api API) Run() {
 	r.HandleFunc("/clouds", testResponse)
 	//retrieve a specific cloud
 	r.HandleFunc("/clouds/{cloud}", testResponse)
-	//retrieve all catalogs
-	r.HandleFunc("/catalog/{tweed}", catalogFunction)
+
+	r.HandleFunc("/catalog", func(w http.ResponseWriter, r *http.Request) {
+		cat, err := api.Catalog()
+		if err != nil {
+			w.WriteHeader(500)
+			fmt.Fprintf(w, "internal error: %s\n", err) // FIXME this is bad, don't do it.
+			return
+		}
+
+		b, err := json.Marshal(cat)
+		if err != nil {
+			w.WriteHeader(500)
+			fmt.Fprintf(w, "internal error: %s\n", err) // FIXME this is bad, don't do it.
+			return
+		}
+
+		w.WriteHeader(200)
+		fmt.Fprintf(w, "%s\n", string(b))
+	})
+
 	//provision a service
-	r.HandleFunc("/provision/{tweed}/{service}/{plan}", provisionFunction)
+	r.HandleFunc("/provision/{service}/{plan}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		parts := strings.SplitN(vars["service"], "--", 2)
+		if len(parts) != 2 {
+			panic("ahhhhhh") // FIXME don't do this its bad
+		}
+
+		prefix := parts[0]
+		service := parts[1]
+		plan := vars["plan"]
+
+		inst, err := api.Provision(prefix, service, plan)
+		if err != nil {
+			w.WriteHeader(500)
+			fmt.Fprintf(w, "internal error: %s\n", err) // FIXME this is bad, don"t do it.
+			return
+		}
+		w.WriteHeader(200)
+		fmt.Fprintf(w, "OK %s\n", inst) // FIXME - use JSON, give some info back
+	})
+
 	//get an instance
-	r.HandleFunc("/instances/{tweed}/{instance}", testResponse)
+	r.HandleFunc("/instances/{instance}", testResponse)
 	//deprovision an instance
-	r.HandleFunc("/deprovision/{tweed}/{instance}", deprovisionFunction)
+	r.HandleFunc("/deprovision/{instance}", deprovisionFunction)
 	//bind an instance
-	r.HandleFunc("/bind/{tweed}/{instance}/{binding}/{nowait}", bindFunction)
+	r.HandleFunc("/bind/{instance}/{binding}/{nowait}", bindFunction)
 	//retrieve binding
-	r.HandleFunc("/getbinding/{tweed}/{instance}", testResponse)
+	r.HandleFunc("/getbinding/{instance}", testResponse)
 	//unbind an instance
-	r.HandleFunc("/unbind/{tweed}/{instance}", unbindFunction)
+	r.HandleFunc("/unbind/{instance}", unbindFunction)
 
 	//start the server
-	log.Fatal(http.ListenAndServe(":8081", r))
+	log.Fatal(http.ListenAndServe(api.Bind, r))
 }
