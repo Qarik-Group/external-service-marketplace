@@ -4,8 +4,6 @@ import (
 	"io/ioutil"
 
 	"gopkg.in/yaml.v2"
-
-	"github.com/starkandwayne/external-service-marketplace/tweed"
 )
 
 type ServiceBroker struct {
@@ -14,8 +12,6 @@ type ServiceBroker struct {
 	Username   string `yaml:"username"`
 	Password   string `yaml:"password"`
 	SkipVerify bool   `yaml:"skip-verify"`
-
-	Backend tweed.Client `yaml:"-"`
 }
 
 type Config struct {
@@ -39,10 +35,6 @@ func ReadConfig(path string) (*Config, error) {
 	err = yaml.Unmarshal(yamlFile, &c)
 	if err != nil {
 		return nil, err
-	}
-
-	for i, b := range c.ServiceBrokers {
-		c.ServicesBrokers[i].Backend = tweed.NewClient(b.Username, b.Password, b.URL)
 	}
 
 	return c, err

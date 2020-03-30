@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -56,12 +55,15 @@ func (a *API) Provision(prefix, service, plan string) (string, error) {
 	// This is where we dispatch off to the actual broker.
 
 	// in James' ideal world, here's what we do
+	/*
 	instance, err := broker.Backend.Provision(service, plan)
 	if err != nil {
 		return "", err
 	}
 
 	return instance.ID, nil
+	*/
+	return "", nil
 }
 
 var config *Config
