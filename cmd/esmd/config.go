@@ -1,13 +1,21 @@
 package main
 
+import (
+	"io/ioutil"
+
+	"gopkg.in/yaml.v2"
+)
+
+type ServiceBroker struct {
+	Prefix     string `yaml:"prefix"`
+	URL        string `yaml:"url"`
+	Username   string `yaml:"username"`
+	Password   string `yaml:"password"`
+	SkipVerify bool   `yaml:"skip-verify"`
+}
+
 type Config struct {
-	ServiceBrokers []struct {
-		Prefix     string `yaml:"prefix"`
-		URL        string `yaml:"url"`
-		Username   string `yaml:"username"`
-		Password   string `yaml:"password"`
-		SkipVerify bool   `yaml:"skip-verify"`
-	} `yaml:"service-brokers"`
+	ServiceBrokers []ServiceBroker `yaml:"service-brokers"`
 
 	Clouds []struct {
 		ID   string `yaml:"id"`
@@ -19,5 +27,24 @@ type Config struct {
 }
 
 func ReadConfig(path string) (*Config, error) {
-	return nil, nil
+	var c *Config
+	yamlFile, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	err = yaml.Unmarshal(yamlFile, &c)
+	if err != nil {
+		return nil, err
+	}
+
+	return c, err
+}
+
+func (c Config) Broker(prefix string) (ServiceBroker, bool) {
+	for _, broker := range c.ServiceBrokers {
+		if broker.Prefix == prefix {
+			return broker, true
+		}
+	}
+	return ServiceBroker{}, false
 }
