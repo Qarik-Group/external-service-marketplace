@@ -111,37 +111,37 @@ func (c *client) delete(path string, out interface{}) error {
 	return err
 }
 
-func Catalog(username, password, url string) tweed.Catalog {
-	c := Connect(url, username, password)
+func (c *client) catalog() tweed.Catalog {
+	//c := Connect(url, username, password)
 	var cat tweed.Catalog
 	c.get("/b/catalog", &cat)
 	util.JSON(cat)
 	return cat
 }
 
-func UnBind(username, password, url string, unbindCmd util.UnbindCommand) api.UnbindResponse {
-	c := Connect(url, username, password)
+func (c *client) unbind(unbindCmd util.UnbindCommand) api.UnbindResponse {
+	//c := Connect(url, username, password)
 	var un api.UnbindResponse
 	c.delete("/b/instances/"+unbindCmd.Args.InstanceBinding[0]+"/bindings/"+unbindCmd.Args.InstanceBinding[1], &un)
 	return un
 }
 
-func Bind(username, password, url string, bindCmd util.BindCommand) api.BindResponse {
-	c := Connect(url, username, password)
+func (c *client) bind(bindCmd util.BindCommand) api.BindResponse {
+	//c := Connect(url, username, password)
 	var out api.BindResponse
 	c.put("/b/instances/"+bindCmd.Args.ID+"/bindings/"+bindCmd.ID, nil, &out)
 	return out
 }
 
-func Provision(username, password, url string, provCmd util.ProvisionCommand) api.ProvisionResponse {
-	c := Connect(url, username, password)
+func (c *client) Provision(provCmd util.ProvisionCommand) api.ProvisionResponse {
+	//c := Connect(url, username, password)
 	var out api.ProvisionResponse
 	c.put("/b/instances/"+provCmd.ID, provCmd, &out)
 	return out
 }
 
-func DeProvision(username, password, url string, deprovCmd util.DeprovisionCommand) api.DeprovisionResponse {
-	c := Connect(url, username, password)
+func (c *client) Deprovision(deprovCmd util.DeprovisionCommand) api.DeprovisionResponse {
+	//c := Connect(url, username, password)
 	var out api.DeprovisionResponse
 	c.delete("/b/instances/"+deprovCmd.Args.InstanceIds[0], &out)
 	return out
