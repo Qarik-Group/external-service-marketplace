@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/starkandwayne/external-service-marketplace/util"
+
 	fmt "github.com/jhunt/go-ansi"
 	"github.com/jhunt/go-cli"
 	env "github.com/jhunt/go-envirotron"
@@ -30,7 +32,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "@R{!!! missing required --listen option}\n")
 		os.Exit(1)
 	}
-	config, err := ReadConfig(options.Config)
+	config, err := util.ReadConfig(options.Config)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{!!! %s: %s}\n", options.Config, err)
 		os.Exit(1)
