@@ -25,6 +25,10 @@ type Options struct {
 		Service string `cli:"-s, --service" env:"ESM_SERVICE"`
 		Plan    string `cli:"-p, --plan" env:"ESM_PLAN"`
 	} `cli:"provision"`
+
+	Deprovision struct {
+		Instance string `cli:"-i, --instance" env:"ESM_INSTANCE"`
+	}
 }
 
 func main() {
@@ -92,6 +96,32 @@ func main() {
 		//json.Unmarshal(body, &cat)
 		util.JSON(prov)
 
-		fmt.Printf("Provisioning... %s  %s", options.Provision.Service, options.Provision.Plan)
+		//fmt.Printf("Provisioning... %s  %s", options.Provision.Service, options.Provision.Plan)
+	}
+	if command == "deprovision" {
+		var prov util.ProvisionCommand
+		s := make([]string, 1)
+		s[0] = "Redis"
+		prov.Args.ServicePlan = s
+		sp, _ := json.Marshal(prov)
+		r := bytes.NewReader(sp)
+		username := "tweed"
+		passwd := "tweed"
+		client := &http.Client{}
+		req, err := http.NewRequest("GET", "http://localhost:8081/provision", r)
+		req.SetBasicAuth(username, passwd)
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Printf("Error: not sent")
+		}
+		//defer req.Body.Close()
+		//body, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			fmt.Printf("Error: body not read")
+		}
+		json.NewDecoder(resp.Body).Decode(&prov)
+		//json.Unmarshal(body, &cat)
+		util.JSON(prov)
+
 	}
 }
