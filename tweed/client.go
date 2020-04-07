@@ -5,34 +5,46 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"strings"
 
 	"github.com/starkandwayne/external-service-marketplace/util"
 	"github.com/tweedproject/tweed"
 	"github.com/tweedproject/tweed/api"
 )
 
-type client struct {
-	http     *http.Client
-	url      string
-	username string
-	password string
+type Config struct {
+	ServiceBrokers []struct {
+		Prefix     string `yaml:"prefix"`
+		URL        string `yaml:"url"`
+		Username   string `yaml:"username"`
+		Password   string `yaml:"password"`
+		SkipVerify bool   `yaml:"skip-verify"`
+	} `yaml:"service-brokers"`
+
+	Clouds []struct {
+		ID   string `yaml:"id"`
+		Name string `yaml:"name"`
+		Type string `yaml:"type"`
+
+		// figure out: how to specify creds for CF / K8s
+	} `yaml:"clouds"`
 }
 
-func Connect(url, username, password string) *client {
-	if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
-		url = "https://" + url
-	}
+type client struct {
+	http      *http.Client
+	config    *util.Config
+	connected bool
+}
+
+func Connect(config *util.Config) *client {
 	return &client{
-		url:      strings.TrimSuffix(url, "/"),
-		username: username,
-		password: password,
-		http:     http.DefaultClient,
+		http:      http.DefaultClient,
+		config:    config,
+		connected: true,
 	}
 }
 
 func (c *client) do(req *http.Request, out interface{}) (*http.Response, error) {
-	req.SetBasicAuth(c.username, c.password)
+	req.SetBasicAuth("tweed", "tweed")
 	res, err := c.http.Do(req)
 	if err != nil || out == nil {
 		return res, err
@@ -54,7 +66,7 @@ func (c *client) do(req *http.Request, out interface{}) (*http.Response, error) 
 	return res, json.Unmarshal(b, &out)
 }
 
-func (c *client) request(method, path string, in interface{}) (*http.Request, error) {
+func (c *client) request(method, url string, in interface{}) (*http.Request, error) {
 	var body bytes.Buffer
 	if in != nil {
 		b, err := json.MarshalIndent(in, "", "  ")
@@ -63,7 +75,7 @@ func (c *client) request(method, path string, in interface{}) (*http.Request, er
 		}
 		body.Write(b)
 	}
-	req, err := http.NewRequest(method, c.url+path, &body)
+	req, err := http.NewRequest(method, url, &body)
 	if err != nil {
 		return nil, err
 	}
@@ -75,8 +87,8 @@ func (c *client) request(method, path string, in interface{}) (*http.Request, er
 	return req, nil
 }
 
-func (c *client) get(path string, out interface{}) error {
-	req, err := c.request("GET", path, nil)
+func (c *client) get(url, route string, out interface{}) error {
+	req, err := c.request("GET", url+route, nil)
 	if err != nil {
 		return err
 	}
@@ -84,8 +96,8 @@ func (c *client) get(path string, out interface{}) error {
 	return err
 }
 
-func (c *client) post(path string, in, out interface{}) error {
-	req, err := c.request("POST", path, in)
+func (c *client) post(url, route string, in, out interface{}) error {
+	req, err := c.request("POST", url+route, in)
 	if err != nil {
 		return err
 	}
@@ -93,8 +105,8 @@ func (c *client) post(path string, in, out interface{}) error {
 	return err
 }
 
-func (c *client) put(path string, in, out interface{}) error {
-	req, err := c.request("PUT", path, in)
+func (c *client) put(url, route string, in, out interface{}) error {
+	req, err := c.request("PUT", url+route, in)
 	if err != nil {
 		return err
 	}
@@ -102,47 +114,54 @@ func (c *client) put(path string, in, out interface{}) error {
 	return err
 }
 
-func (c *client) delete(path string, out interface{}) error {
-	req, err := c.request("DELETE", path, nil)
+func (c *client) delete(url, route string, out interface{}) error {
+	req, err := c.request("DELETE", url+route, nil)
 	if err != nil {
 		return err
 	}
 	_, err = c.do(req, out)
 	return err
 }
+func (c *client) status() bool {
+	if c.connected {
+		return true
+	}
+	return false
+}
 
-func Catalog(username, password, url string) tweed.Catalog {
-	c := Connect(url, username, password)
+func (c *client) Catalog() []tweed.Catalog {
 	var cat tweed.Catalog
-	c.get("/b/catalog", &cat)
-	util.JSON(cat)
-	return cat
+	broker := c.config.ServiceBrokers[0]
+	var cats []tweed.Catalog
+	for i := 0; i < len(c.config.ServiceBrokers); i++ {
+		broker = c.config.ServiceBrokers[i]
+		c.get(broker.URL, "/b/catalog", &cat)
+		cats = append(cats, cat)
+		util.JSON(cat)
+	}
+	return cats
 }
 
-func UnBind(username, password, url string, unbindCmd util.UnbindCommand) api.UnbindResponse {
-	c := Connect(url, username, password)
+func (c *client) UnBind(url string, unbindCmd util.UnbindCommand) api.UnbindResponse {
 	var un api.UnbindResponse
-	c.delete("/b/instances/"+unbindCmd.Args.InstanceBinding[0]+"/bindings/"+unbindCmd.Args.InstanceBinding[1], &un)
+	c.delete(url, "/b/instances/"+unbindCmd.Args.InstanceBinding[0]+"/bindings/"+unbindCmd.Args.InstanceBinding[1], &un)
 	return un
 }
 
-func Bind(username, password, url string, bindCmd util.BindCommand) api.BindResponse {
-	c := Connect(url, username, password)
+func (c *client) Bind(url string, bindCmd util.BindCommand) api.BindResponse {
 	var out api.BindResponse
-	c.put("/b/instances/"+bindCmd.Args.ID+"/bindings/"+bindCmd.ID, nil, &out)
+	c.put(url, "/b/instances/"+bindCmd.Args.ID+"/bindings/"+bindCmd.ID, nil, &out)
 	return out
 }
 
-func Provision(username, password, url string, provCmd util.ProvisionCommand) api.ProvisionResponse {
-	c := Connect(url, username, password)
+func (c *client) Provision(url string, provCmd util.ProvisionCommand) api.ProvisionResponse {
 	var out api.ProvisionResponse
-	c.put("/b/instances/"+provCmd.ID, provCmd, &out)
+	c.put(url, "/b/instances/"+provCmd.ID, provCmd, &out)
 	return out
 }
 
-func DeProvision(username, password, url string, deprovCmd util.DeprovisionCommand) api.DeprovisionResponse {
-	c := Connect(url, username, password)
+func (c *client) DeProvision(url string, deprovCmd util.DeprovisionCommand) api.DeprovisionResponse {
 	var out api.DeprovisionResponse
-	c.delete("/b/instances/"+deprovCmd.Args.InstanceIds[0], &out)
+	c.delete(url, "/b/instances/"+deprovCmd.Args.InstanceIds[0], &out)
 	return out
 }

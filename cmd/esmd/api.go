@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/tweedproject/tweed/api"
+
 	"github.com/gorilla/mux"
 	"github.com/starkandwayne/external-service-marketplace/tweed"
 	"github.com/starkandwayne/external-service-marketplace/util"
@@ -28,45 +30,110 @@ func (c *Catalog) Merge(prefix string, other realtweed.Catalog) {
 }
 
 type API struct {
-	Config *Config
+	Config *util.Config
 	Bind   string
 }
 
-func (a *API) Catalog() (Catalog, error) {
-	c := Catalog{}
+func (a *API) Catalog() (realtweed.Catalog, error) {
+	var c realtweed.Catalog
 
-	for _, broker := range a.Config.ServiceBrokers {
-		cat := tweed.Catalog(broker.Username, broker.Password, broker.URL)
+	/*for _, broker := range a.Config.ServiceBrokers {
+		cat := tweed.Catalog(broker.URL)
 		c.Merge(broker.Prefix, cat)
+	}*/
+	//loop over catalogs and condense
+	cats := tweed.Connect(a.Config).Catalog()
+	for _, catalog := range cats {
+		c.Services = append(c.Services, catalog.Services[0])
 	}
 
 	return c, nil
 }
 
-func (a *API) Provision(prefix, service, plan string) (string, error) {
+func (a *API) Provision(cmd util.ProvisionCommand, prefix string, service string, plan string) (api.ProvisionResponse, error) {
 	fmt.Printf("PROVISIONING [%s][%s][%s]\n", prefix, service, plan)
 
 	broker, found := a.Config.Broker(prefix)
+	var nothing api.ProvisionResponse
 	if !found {
-		return "", fmt.Errorf("no such broker '%s'", prefix)
+		return nothing, fmt.Errorf("no such broker '%s'", prefix)
 	}
 
 	fmt.Printf("PROVISIONING against tweed at %s (u:%s, p:%s)\n", broker.URL, broker.Username, broker.Password)
 	// This is where we dispatch off to the actual broker.
+	t := tweed.Connect(a.Config)
+	provInst := t.Provision(broker.URL, cmd)
 
 	// in James' ideal world, here's what we do
 	/*
-	instance, err := broker.Backend.Provision(service, plan)
-	if err != nil {
-		return "", err
-	}
+		instance, err := broker.Backend.Provision(service, plan)
+		if err != nil {
+			return "", err
+		}
 
-	return instance.ID, nil
+		return instance.ID, nil
 	*/
-	return "", nil
+	return provInst, nil
 }
 
-var config *Config
+func (a *API) Deprovision(cmd util.DeprovisionCommand, prefix, instance string) (api.DeprovisionResponse, error) {
+	fmt.Printf("DEPROVISIONING [%s][%s]\n", prefix, instance)
+
+	broker, found := a.Config.Broker(prefix)
+	var nothing api.DeprovisionResponse
+	if !found {
+		return nothing, fmt.Errorf("no such broker '%s'", prefix)
+	}
+
+	fmt.Printf("DEPROVISIONING against tweed at %s (u:%s, p:%s)\n", broker.URL, broker.Username, broker.Password)
+	// This is where we dispatch off to the actual broker.
+	t := tweed.Connect(a.Config)
+	deprovInst := t.DeProvision(broker.URL, cmd)
+
+	// in James' ideal world, here's what we do
+	/*
+		instance, err := broker.Backend.Provision(service, plan)
+		if err != nil {
+			return "", err
+		}
+
+		return instance.ID, nil
+	*/
+	return deprovInst, nil
+}
+func (a *API) BindSVC(cmd util.BindCommand, prefix string, instance string) (api.BindResponse, error) {
+	fmt.Printf("Binding [%s][%s]\n", prefix, instance)
+
+	broker, found := a.Config.Broker(prefix)
+	var nothing api.BindResponse
+	if !found {
+		return nothing, fmt.Errorf("no such broker '%s'", prefix)
+	}
+
+	fmt.Printf("Binding against tweed at %s (u:%s, p:%s)\n", broker.URL, broker.Username, broker.Password)
+	t := tweed.Connect(a.Config)
+	bindInst := t.Bind(broker.URL, cmd)
+
+	return bindInst, nil
+}
+func (a *API) Unbind(cmd util.UnbindCommand, prefix, instance string) (api.UnbindResponse, error) {
+	fmt.Printf("Unbinding [%s][%s]\n", prefix, instance)
+
+	broker, found := a.Config.Broker(prefix)
+	var nothing api.UnbindResponse
+	if !found {
+		return nothing, fmt.Errorf("no such broker '%s'", prefix)
+	}
+
+	fmt.Printf("Unbinding against tweed at %s (u:%s, p:%s)\n", broker.URL, broker.Username, broker.Password)
+
+	t := tweed.Connect(a.Config)
+	unbindInst := t.UnBind(broker.URL, cmd)
+
+	return unbindInst, nil
+}
+
+var config *util.Config
 var url string
 
 func findTweed(tweedname string) int {
@@ -82,7 +149,8 @@ func findTweed(tweedname string) int {
 func testResponse(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Endpoint Hit")
 }
-func bindFunction(w http.ResponseWriter, r *http.Request) {
+
+/*func bindFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	tweedIndex := findTweed(vars["tweed"])
 	//instance := vars["instance"]
@@ -110,9 +178,9 @@ func bindFunction(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(res.Ref))
 
-}
+} */
 
-func unbindFunction(w http.ResponseWriter, r *http.Request) {
+/*func unbindFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	instance := vars["instance"]
 	binding := vars["binding"]
@@ -156,9 +224,9 @@ func unbindFunction(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(res.Ref))
 
-}
+} */
 
-func provisionFunction(w http.ResponseWriter, r *http.Request) {
+/*func provisionFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	tweedIndex := findTweed(vars["tweed"])
 	//instance := vars["instance"]
@@ -193,9 +261,9 @@ func provisionFunction(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(res.Ref))
 
-}
+} */
 
-func deprovisionFunction(w http.ResponseWriter, r *http.Request) {
+/*func deprovisionFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	instance := vars["instance"]
 	tweedIndex := findTweed(vars["tweed"])
@@ -227,7 +295,7 @@ func deprovisionFunction(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(res.Ref))
 
-}
+} */
 
 func (api API) Run() {
 	config = api.Config
@@ -273,8 +341,19 @@ func (api API) Run() {
 		prefix := parts[0]
 		service := parts[1]
 		plan := vars["plan"]
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Error Reading Request Body"))
+			return
+		}
+		var provCmd util.ProvisionCommand
+		s := make([]string, 2)
+		s[0] = service
+		s[1] = plan
+		json.Unmarshal(body, &provCmd)
 
-		inst, err := api.Provision(prefix, service, plan)
+		inst, err := api.Provision(provCmd, prefix, service, plan)
 		if err != nil {
 			w.WriteHeader(500)
 			fmt.Fprintf(w, "internal error: %s\n", err) // FIXME this is bad, don"t do it.
@@ -287,13 +366,81 @@ func (api API) Run() {
 	//get an instance
 	r.HandleFunc("/instances/{instance}", testResponse)
 	//deprovision an instance
-	r.HandleFunc("/deprovision/{instance}", deprovisionFunction)
+	r.HandleFunc("/deprovision/{prefix}/{instance}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		s := make([]string, 1)
+		s[0] = vars["instance"]
+
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Error Reading Request Body"))
+			return
+		}
+		var deprovCmd util.DeprovisionCommand
+		//deprovCmd.Args.InstanceIds = instance
+		json.Unmarshal(body, &deprovCmd)
+		inst, err := api.Deprovision(deprovCmd, vars["prefix"], vars["instance"])
+		if err != nil {
+			w.WriteHeader(500)
+			fmt.Fprintf(w, "internal error: %s\n", err) // FIXME this is bad, don"t do it.
+			return
+		}
+		w.WriteHeader(200)
+		w.Write([]byte(inst.Ref))
+		//fmt.Fprintf(w, "OK %s\n", inst) // FIXME - use JSON, give some info back
+	})
 	//bind an instance
-	r.HandleFunc("/bind/{instance}/{binding}/{nowait}", bindFunction)
+	r.HandleFunc("/bind/{prefix}/{instance}/{binding}/{nowait}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+
+		var bindCmd util.BindCommand
+		err := json.NewDecoder(r.Body).Decode(&bindCmd)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Error Reading Request Body"))
+			return
+		}
+		inst, err := api.BindSVC(bindCmd, vars["prefix"], vars["instance"])
+		if err != nil {
+			w.WriteHeader(500)
+			fmt.Fprintf(w, "internal error: %s\n", err) // FIXME this is bad, don"t do it.
+			return
+		}
+		w.WriteHeader(200)
+		w.Write([]byte(inst.Ref))
+		//fmt.Fprintf(w, "OK %s\n", inst) // FIXME - use JSON, give some info back
+	})
 	//retrieve binding
 	r.HandleFunc("/getbinding/{instance}", testResponse)
 	//unbind an instance
-	r.HandleFunc("/unbind/{instance}", unbindFunction)
+	r.HandleFunc("/unbind/{instance}", func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Error Reading Request Body"))
+			return
+		}
+
+		var unbindCmd util.UnbindCommand
+		err = json.Unmarshal(body, &unbindCmd)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte("Did you use the UnbindCommand struct in util directory when you created your request. Please use that format"))
+			return
+		}
+		inst, err := api.Unbind(unbindCmd, vars["prefix"], vars["instance"])
+		if err != nil {
+			w.WriteHeader(500)
+			fmt.Fprintf(w, "internal error: %s\n", err) // FIXME this is bad, don"t do it.
+			return
+		}
+		w.WriteHeader(200)
+		w.Write([]byte(inst.Ref))
+		//fmt.Fprintf(w, "OK %s\n", inst) // FIXME - use JSON, give some info back
+	})
 
 	//start the server
 	log.Fatal(http.ListenAndServe(api.Bind, r))
