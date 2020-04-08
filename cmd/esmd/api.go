@@ -35,19 +35,19 @@ type API struct {
 }
 
 func (a *API) Catalog() (realtweed.Catalog, error) {
-	var c realtweed.Catalog
+	var c Catalog
 
-	/*for _, broker := range a.Config.ServiceBrokers {
-		cat := tweed.Catalog(broker.URL)
+	for _, broker := range a.Config.ServiceBrokers {
+		cat := tweed.Connect(a.Config).SingleCatalog(broker.URL)
 		c.Merge(broker.Prefix, cat)
-	}*/
+	}
 	//loop over catalogs and condense
 	cats := tweed.Connect(a.Config).Catalog()
 	for _, catalog := range cats {
 		c.Services = append(c.Services, catalog.Services[0])
 	}
 
-	return c, nil
+	return c.Catalog, nil
 }
 
 func (a *API) Provision(cmd util.ProvisionCommand, prefix string, service string, plan string) (api.ProvisionResponse, error) {
@@ -101,6 +101,7 @@ func (a *API) Deprovision(cmd util.DeprovisionCommand, prefix, instance string) 
 	*/
 	return deprovInst, nil
 }
+
 func (a *API) BindSVC(cmd util.BindCommand, prefix string, instance string) (api.BindResponse, error) {
 	fmt.Printf("Binding [%s][%s]\n", prefix, instance)
 
@@ -116,6 +117,7 @@ func (a *API) BindSVC(cmd util.BindCommand, prefix string, instance string) (api
 
 	return bindInst, nil
 }
+
 func (a *API) Unbind(cmd util.UnbindCommand, prefix, instance string) (api.UnbindResponse, error) {
 	fmt.Printf("Unbinding [%s][%s]\n", prefix, instance)
 
@@ -146,6 +148,7 @@ func findTweed(tweedname string) int {
 	}
 	return -1
 }
+
 func testResponse(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Endpoint Hit")
 }
@@ -352,6 +355,7 @@ func (api API) Run() {
 		s[0] = service
 		s[1] = plan
 		json.Unmarshal(body, &provCmd)
+		provCmd.Args.ServicePlan[0] = service + string('/') + plan //not sure if this works
 
 		inst, err := api.Provision(provCmd, prefix, service, plan)
 		if err != nil {
@@ -360,7 +364,8 @@ func (api API) Run() {
 			return
 		}
 		w.WriteHeader(200)
-		fmt.Fprintf(w, "OK %s\n", inst) // FIXME - use JSON, give some info back
+		json.NewEncoder(w).Encode(inst)
+		//fmt.Fprintf(w, "OK %s\n", inst) // FIXME - use JSON, give some info back
 	})
 
 	//get an instance

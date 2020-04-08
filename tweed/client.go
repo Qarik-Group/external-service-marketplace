@@ -128,7 +128,12 @@ func (c *client) status() bool {
 	}
 	return false
 }
-
+func (c *client) SingleCatalog(url string) tweed.Catalog {
+	var cat tweed.Catalog
+	c.get(url, "/b/catalog", &cat)
+	util.JSON(cat)
+	return cat
+}
 func (c *client) Catalog() []tweed.Catalog {
 	var cat tweed.Catalog
 	broker := c.config.ServiceBrokers[0]
