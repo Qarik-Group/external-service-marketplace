@@ -42,10 +42,10 @@ func (a *API) Catalog() (realtweed.Catalog, error) {
 		c.Merge(broker.Prefix, cat)
 	}
 	//loop over catalogs and condense
-	cats := tweed.Connect(a.Config).Catalog()
+	/*cats := tweed.Connect(a.Config).Catalog()
 	for _, catalog := range cats {
 		c.Services = append(c.Services, catalog.Services[0])
-	}
+	}*/
 
 	return c.Catalog, nil
 }
@@ -101,7 +101,6 @@ func (a *API) Deprovision(cmd util.DeprovisionCommand, prefix, instance string) 
 	*/
 	return deprovInst, nil
 }
-
 func (a *API) BindSVC(cmd util.BindCommand, prefix string, instance string) (api.BindResponse, error) {
 	fmt.Printf("Binding [%s][%s]\n", prefix, instance)
 
@@ -117,7 +116,6 @@ func (a *API) BindSVC(cmd util.BindCommand, prefix string, instance string) (api
 
 	return bindInst, nil
 }
-
 func (a *API) Unbind(cmd util.UnbindCommand, prefix, instance string) (api.UnbindResponse, error) {
 	fmt.Printf("Unbinding [%s][%s]\n", prefix, instance)
 
@@ -148,7 +146,6 @@ func findTweed(tweedname string) int {
 	}
 	return -1
 }
-
 func testResponse(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Endpoint Hit")
 }
@@ -393,7 +390,7 @@ func (api API) Run() {
 			return
 		}
 		w.WriteHeader(200)
-		w.Write([]byte(inst.Ref))
+		json.NewEncoder(w).Encode(inst)
 		//fmt.Fprintf(w, "OK %s\n", inst) // FIXME - use JSON, give some info back
 	})
 	//bind an instance
@@ -414,7 +411,7 @@ func (api API) Run() {
 			return
 		}
 		w.WriteHeader(200)
-		w.Write([]byte(inst.Ref))
+		json.NewEncoder(w).Encode(inst)
 		//fmt.Fprintf(w, "OK %s\n", inst) // FIXME - use JSON, give some info back
 	})
 	//retrieve binding
@@ -443,7 +440,7 @@ func (api API) Run() {
 			return
 		}
 		w.WriteHeader(200)
-		w.Write([]byte(inst.Ref))
+		json.NewEncoder(w).Encode(inst)
 		//fmt.Fprintf(w, "OK %s\n", inst) // FIXME - use JSON, give some info back
 	})
 
