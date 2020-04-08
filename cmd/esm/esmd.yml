@@ -1,11 +1,11 @@
 
 service-brokers:
   - prefix:   abbot
-    url:      http://10.128.32.138:31829
+    url:      http://10.128.32.138:32632
     username: tweed
     password: tweed
 
   - prefix:   costello
-    url:      http://10.128.32.138:31829
+    url:      http://10.128.32.138:32632
     username: tweed
     password: tweed

@@ -35,7 +35,7 @@ type API struct {
 }
 
 func (a *API) Catalog() (realtweed.Catalog, error) {
-	var c Catalog
+	c := Catalog{}
 
 	for _, broker := range a.Config.ServiceBrokers {
 		cat := tweed.Connect(a.Config).SingleCatalog(broker.URL)
@@ -44,7 +44,7 @@ func (a *API) Catalog() (realtweed.Catalog, error) {
 	//loop over catalogs and condense
 	/*cats := tweed.Connect(a.Config).Catalog()
 	for _, catalog := range cats {
-		c.Services = append(c.Services, catalog.Services[0])
+		c.Services = append(c.Services, catalog.Services)
 	}*/
 
 	return c.Catalog, nil
@@ -348,11 +348,10 @@ func (api API) Run() {
 			return
 		}
 		var provCmd util.ProvisionCommand
-		s := make([]string, 2)
-		s[0] = service
-		s[1] = plan
+		s := make([]string, 1)
+		s[0] = service + string('/') + plan
 		json.Unmarshal(body, &provCmd)
-		provCmd.Args.ServicePlan[0] = service + string('/') + plan //not sure if this works
+		provCmd.Args.ServicePlan = s //not sure if this works
 
 		inst, err := api.Provision(provCmd, prefix, service, plan)
 		if err != nil {
@@ -381,7 +380,7 @@ func (api API) Run() {
 			return
 		}
 		var deprovCmd util.DeprovisionCommand
-		//deprovCmd.Args.InstanceIds = instance
+		deprovCmd.Args.InstanceIds = s
 		json.Unmarshal(body, &deprovCmd)
 		inst, err := api.Deprovision(deprovCmd, vars["prefix"], vars["instance"])
 		if err != nil {
