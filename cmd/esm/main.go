@@ -17,7 +17,7 @@ type Options struct {
 	Help  bool `cli:"-h, --help"`
 	Debug bool `cli:"-D, --debug" env:"ESM_DEBUG"`
 	Trace bool `cli:"-T, --trace" env:"ESM_TRACE"`
-
+    
 	Catalog struct {
 	} `cli:"catalog"`
 
@@ -34,9 +34,9 @@ type Options struct {
 func main() {
 
 	var options Options
+
 	env.Override(&options)
-	options.Provision.Service = "Subcommand --service to be entered here\n"
-	//options.Provision.Plan = "Subcommand --plan to be entered here \n "
+
 	command, args, err := cli.Parse(&options)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{!!! %s}\n", err)
@@ -44,15 +44,8 @@ func main() {
 
 	if command == "catalog" {
 		var cat tweed.Catalog
-		//r, _ := http.NewRequest("GET", "http://localhost:8081/catalog", nil)
-		//r, err := http.Get("http://localhost:8081/catalog")
-		//r.Header.Set("Content-Type", "application/json")
-		//req, err := http.DefaultClient.Do(r)
-		username := "tweed"
-		passwd := "tweed"
 		client := &http.Client{}
-		req, err := http.NewRequest("GET", "http://localhost:8081/catalog", nil)
-		req.SetBasicAuth(username, passwd)
+		req, err := http.NewRequest("GET",  , nil)
 		resp, err := client.Do(req)
 		if err != nil {
 			fmt.Printf("Error: not sent")
@@ -81,7 +74,7 @@ func main() {
 		username := "tweed"
 		passwd := "tweed"
 		client := &http.Client{}
-		req, err := http.NewRequest("GET", "http://localhost:8081/provision", r)
+		req, err := http.NewRequest("POST", "http://localhost:8081/provision", r)
 		req.SetBasicAuth(username, passwd)
 		resp, err := client.Do(req)
 		if err != nil {
