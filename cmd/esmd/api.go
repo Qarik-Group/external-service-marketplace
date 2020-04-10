@@ -348,10 +348,8 @@ func (api API) Run() {
 			return
 		}
 		var provCmd util.ProvisionCommand
-		s := make([]string, 1)
-		s[0] = service + string('/') + plan
 		json.Unmarshal(body, &provCmd)
-		provCmd.Args.ServicePlan = s //not sure if this works
+		provCmd.Args.ServicePlan = []string{service + "/" + plan} //not sure if this works
 
 		inst, err := api.Provision(provCmd, prefix, service, plan)
 		if err != nil {
@@ -360,8 +358,8 @@ func (api API) Run() {
 			return
 		}
 		w.WriteHeader(200)
-		json.NewEncoder(w).Encode(inst)
-		//fmt.Fprintf(w, "OK %s\n", inst) // FIXME - use JSON, give some info back
+		//json.NewEncoder(w).Encode(inst)
+		fmt.Fprintf(w, "OK %s\n", inst) // FIXME - use JSON, give some info back
 	})
 
 	//get an instance
