@@ -3,6 +3,7 @@ package tweed
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -161,6 +162,8 @@ func (c *client) Bind(url string, bindCmd util.BindCommand) api.BindResponse {
 
 func (c *client) Provision(url string, provCmd util.ProvisionCommand) api.ProvisionResponse {
 	var out api.ProvisionResponse
+	fmt.Println("From Tweed Provision")
+	util.JSON(provCmd)
 	c.put(url, "/b/instances/"+provCmd.ID, provCmd, &out)
 	return out
 }

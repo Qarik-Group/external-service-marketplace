@@ -58,7 +58,8 @@ func (a *API) Provision(cmd util.ProvisionCommand, prefix string, service string
 	if !found {
 		return nothing, fmt.Errorf("no such broker '%s'", prefix)
 	}
-
+	fmt.Println("Provision From API")
+	util.JSON(cmd)
 	fmt.Printf("PROVISIONING against tweed at %s (u:%s, p:%s)\n", broker.URL, broker.Username, broker.Password)
 	// This is where we dispatch off to the actual broker.
 	t := tweed.Connect(a.Config)
