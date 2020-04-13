@@ -50,8 +50,8 @@ func (a *API) Catalog() (realtweed.Catalog, error) {
 	return c.Catalog, nil
 }
 
-func (a *API) Provision(cmd util.ProvisionCommand, prefix string, service string, plan string) (api.ProvisionResponse, error) {
-	fmt.Printf("PROVISIONING [%s][%s][%s]\n", prefix, service, plan)
+func (a *API) Provision(cmd util.ProvisionCommand, prefix string) (api.ProvisionResponse, error) {
+	fmt.Printf("PROVISIONING [%s][%s][%s]\n", prefix, cmd.Service, cmd.Plan)
 
 	broker, found := a.Config.Broker(prefix)
 	var nothing api.ProvisionResponse
@@ -350,15 +350,21 @@ func (api API) Run() {
 		}
 		var provCmd util.ProvisionCommand
 		json.Unmarshal(body, &provCmd)
-		provCmd.Args.ServicePlan = []string{service + "/" + plan} //not sure if this works
+		provCmd.Service = service
+		provCmd.Plan = plan //not sure if this works
 
-		inst, err := api.Provision(provCmd, prefix, service, plan)
+		inst, err := api.Provision(provCmd, prefix)
 		if err != nil {
 			w.WriteHeader(500)
 			fmt.Fprintf(w, "internal error: %s\n", err) // FIXME this is bad, don"t do it.
 			return
+		} else if inst.Error != "" {
+			w.Write([]byte(inst.Ref))
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 		w.WriteHeader(200)
+		w.Write([]byte(inst.Ref))
 		//json.NewEncoder(w).Encode(inst)
 		fmt.Fprintf(w, "OK %s\n", inst) // FIXME - use JSON, give some info back
 	})

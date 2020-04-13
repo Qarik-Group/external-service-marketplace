@@ -18,7 +18,7 @@ type CatalogCommand struct {
 }
 
 type ProvisionCommand struct {
-	Service string            `json:"services"`
+	Service string            `json:"service"`
 	Plan    string            `json:"plan"`
 	Param   map[string]string `json:"params"`
 }
