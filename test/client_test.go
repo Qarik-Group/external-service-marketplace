@@ -46,9 +46,9 @@ func TestDeprovision(t *testing.T) {
 func TestProvision(t *testing.T) {
 	config, _ := util.ReadConfig("cmd/esm/esmd.yml")
 	var provCmd util.ProvisionCommand
-	ids := []string{"redis" + "/" + "shared"}
-	provCmd.Args.ServicePlan = ids
-	provCmd.ID = "i-37hdg475gdyth2"
+	//ids := []string{"redis" + "/" + "shared"}
+	provCmd.Service = "postgres"
+	provCmd.Plan = "v7"
 
 	client := tweed.Connect(config)
 	res := client.Provision("http://10.128.32.138:32632", provCmd)

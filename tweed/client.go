@@ -10,6 +10,7 @@ import (
 	"github.com/starkandwayne/external-service-marketplace/util"
 	"github.com/tweedproject/tweed"
 	"github.com/tweedproject/tweed/api"
+	"github.com/tweedproject/tweed/random"
 )
 
 type Config struct {
@@ -162,9 +163,10 @@ func (c *client) Bind(url string, bindCmd util.BindCommand) api.BindResponse {
 
 func (c *client) Provision(url string, provCmd util.ProvisionCommand) api.ProvisionResponse {
 	var out api.ProvisionResponse
+	id := random.ID("i")
 	fmt.Println("From Tweed Provision")
 	util.JSON(provCmd)
-	c.put(url, "/b/instances/"+provCmd.ID, provCmd, &out)
+	c.put(url, "/b/instances/"+id, provCmd, &out)
 	return out
 }
 
