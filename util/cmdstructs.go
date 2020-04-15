@@ -18,12 +18,9 @@ type CatalogCommand struct {
 }
 
 type ProvisionCommand struct {
-	ID     string   `long:"as" optional:"yes" description:"use given service id otherwise use random"`
-	NoWait bool     `long:"no-wait" description:"don't wait for the service to be created"`
-	Params []string `short:"P" optional:"yes" long:"params" description:"params passed to the service"`
-	Args   struct {
-		ServicePlan []string `positional-arg-name:"service/plan" required:"true"`
-	} `positional-args:"yes"`
+	Service string            `json:"service"`
+	Plan    string            `json:"plan"`
+	Param   map[string]string `json:"params"`
 }
 
 type DeprovisionCommand struct {

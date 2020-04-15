@@ -12,4 +12,5 @@ require (
 	github.com/onsi/ginkgo v1.12.0 // indirect
 	github.com/onsi/gomega v1.9.0 // indirect
 	github.com/tweedproject/tweed v0.0.0-20200205200343-1c1696590f05
+	gopkg.in/yaml.v2 v2.2.8
 )

@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/starkandwayne/external-service-marketplace/util"
+
 	fmt "github.com/jhunt/go-ansi"
 	"github.com/jhunt/go-cli"
 	env "github.com/jhunt/go-envirotron"
@@ -19,18 +21,18 @@ type Options struct {
 
 func main() {
 	var options Options
-	options.Config = "/etc/esm/esmd.yml"
+	options.Config = "cmd/esm/esmd.yml" //need to change this
 	env.Override(&options)
-	command, args, err := cli.Parse(&options)
-
-	_ = args // remove this when we start using `args`
+	_, _, err := cli.Parse(&options)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{!!! %s}\n", err)
 	}
 
-	fmt.Printf("running command @G{%s}...\n", command)
-
-	config, err := ReadConfig(options.Config)
+	if options.Listen == "" {
+		fmt.Fprintf(os.Stderr, "@R{!!! missing required --listen option}\n")
+		os.Exit(1)
+	}
+	config, err := util.ReadConfig(options.Config)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{!!! %s: %s}\n", options.Config, err)
 		os.Exit(1)
@@ -42,6 +44,7 @@ func main() {
 	}
 
 	fmt.Fprintf(os.Stderr, "running api server...\n")
+	fmt.Fprintf(os.Stderr, "(listening on %s)\n", api.Bind)
 	api.Run()
 	fmt.Fprintf(os.Stderr, "api server exited...\n")
 	os.Exit(1)
