@@ -30,18 +30,16 @@ func TestBind(t *testing.T) {
 		t.Errorf("Error in TestBind()\n" + res.Error + "\n res: \n" + res.Ref)
 	}
 }
-
+*/
 func TestDeprovision(t *testing.T) {
-	var deprovCmd util.DeprovisionCommand
-	ids := []string{"hi", "hello"}
-	deprovCmd.Args.InstanceIds = ids
-	var conf *util.Config
-	client := tweed.Connect(conf)
-	res := client.DeProvision("http://10.128.32.138:31666", deprovCmd)
+	config, _ := util.ReadConfig("cmd/esm/esmd.yml")
+	instance := "i-9d62e7231649bf" //replace this with something relevant
+	client := tweed.Connect(config)
+	res := client.DeProvision("http://10.128.32.138:32632", instance)
 	if res.Error == "" && res.OK == "" {
 		t.Errorf("Error in TestDeprovision()\n" + res.Error + "\n res: \n" + res.Ref)
 	}
-} */
+}
 
 func TestProvision(t *testing.T) {
 	config, _ := util.ReadConfig("cmd/esm/esmd.yml")
@@ -49,10 +47,9 @@ func TestProvision(t *testing.T) {
 	//ids := []string{"redis" + "/" + "shared"}
 	provCmd.Service = "redis"
 	provCmd.Plan = "shared"
-
 	client := tweed.Connect(config)
 	res := client.Provision("http://10.128.32.138:32632", provCmd)
-	if res.Error == "" {
+	if res.Error != "" {
 		t.Errorf("Error in TestProvision()\n" + res.Error + "\n res: \n" + res.Ref)
 	}
 }

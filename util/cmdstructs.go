@@ -24,8 +24,6 @@ type ProvisionCommand struct {
 }
 
 type DeprovisionCommand struct {
-	NoWait bool `long:"no-wait" description:"don't wait for the service be deprovisioned"`
-	Args   struct {
-		InstanceIds []string `positional-arg-name:"instance" required:"true"`
-	} `positional-args:"yes"`
+	NoWait   bool   `long:"no-wait" description:"don't wait for the service be deprovisioned"`
+	Instance string `json:"instance"`
 }

@@ -52,7 +52,6 @@ func (a *API) Catalog() (realtweed.Catalog, error) {
 
 func (a *API) Provision(cmd util.ProvisionCommand, prefix string) (api.ProvisionResponse, error) {
 	fmt.Printf("PROVISIONING [%s][%s][%s]\n", prefix, cmd.Service, cmd.Plan)
-
 	broker, found := a.Config.Broker(prefix)
 	var nothing api.ProvisionResponse
 	if !found {
@@ -64,20 +63,18 @@ func (a *API) Provision(cmd util.ProvisionCommand, prefix string) (api.Provision
 	// This is where we dispatch off to the actual broker.
 	t := tweed.Connect(a.Config)
 	provInst := t.Provision(broker.URL, cmd)
-
 	// in James' ideal world, here's what we do
 	/*
 		instance, err := broker.Backend.Provision(service, plan)
 		if err != nil {
 			return "", err
 		}
-
 		return instance.ID, nil
 	*/
 	return provInst, nil
 }
 
-func (a *API) Deprovision(cmd util.DeprovisionCommand, prefix, instance string) (api.DeprovisionResponse, error) {
+func (a *API) Deprovision(prefix, instance string) (api.DeprovisionResponse, error) {
 	fmt.Printf("DEPROVISIONING [%s][%s]\n", prefix, instance)
 
 	broker, found := a.Config.Broker(prefix)
@@ -89,7 +86,7 @@ func (a *API) Deprovision(cmd util.DeprovisionCommand, prefix, instance string) 
 	fmt.Printf("DEPROVISIONING against tweed at %s (u:%s, p:%s)\n", broker.URL, broker.Username, broker.Password)
 	// This is where we dispatch off to the actual broker.
 	t := tweed.Connect(a.Config)
-	deprovInst := t.DeProvision(broker.URL, cmd)
+	deprovInst := t.DeProvision(broker.URL, instance)
 
 	// in James' ideal world, here's what we do
 	/*
@@ -227,43 +224,6 @@ func testResponse(w http.ResponseWriter, r *http.Request) {
 
 } */
 
-/*func provisionFunction(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tweedIndex := findTweed(vars["tweed"])
-	//instance := vars["instance"]
-	service := vars["service"]
-	plan := vars["plan"]
-	//nowait := vars["nowait"]
-	username := config.ServiceBrokers[tweedIndex].Username
-	password := config.ServiceBrokers[tweedIndex].Password
-	url := config.ServiceBrokers[tweedIndex].URL
-	//username, password, _ := r.BasicAuth()
-
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Error Reading Request Body"))
-		return
-	}
-	var provCmd util.ProvisionCommand
-	s := make([]string, 2)
-	s[0] = service
-	s[1] = plan
-	json.Unmarshal(body, &provCmd)
-
-	//provCmd.Args.ServicePlan = s
-
-	res := tweed.Provision(username, password, url, provCmd)
-	if res.Error != "" {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Error In Request"))
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(res.Ref))
-
-} */
-
 /*func deprovisionFunction(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	instance := vars["instance"]
@@ -375,19 +335,19 @@ func (api API) Run() {
 	r.HandleFunc("/deprovision/{prefix}/{instance}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		s := make([]string, 1)
-		s[0] = vars["instance"]
+		//s := make([]string, 1)
+		//s[0] = vars["instance"]
 
-		body, err := ioutil.ReadAll(r.Body)
+		/*body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("Error Reading Request Body"))
 			return
 		}
 		var deprovCmd util.DeprovisionCommand
-		deprovCmd.Args.InstanceIds = s
-		json.Unmarshal(body, &deprovCmd)
-		inst, err := api.Deprovision(deprovCmd, vars["prefix"], vars["instance"])
+		deprovCmd.Instance = instance
+		json.Unmarshal(body, &deprovCmd) */
+		inst, err := api.Deprovision(vars["prefix"], vars["instance"])
 		if err != nil {
 			w.WriteHeader(500)
 			fmt.Fprintf(w, "internal error: %s\n", err) // FIXME this is bad, don"t do it.

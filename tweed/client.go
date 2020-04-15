@@ -166,12 +166,13 @@ func (c *client) Provision(url string, provCmd util.ProvisionCommand) api.Provis
 	id := random.ID("i")
 	fmt.Println("From Tweed Provision")
 	util.JSON(provCmd)
+	fmt.Println("ID: if used for provision :" + id)
 	c.put(url, "/b/instances/"+id, provCmd, &out)
 	return out
 }
 
-func (c *client) DeProvision(url string, deprovCmd util.DeprovisionCommand) api.DeprovisionResponse {
+func (c *client) DeProvision(url string, instance string) api.DeprovisionResponse {
 	var out api.DeprovisionResponse
-	c.delete(url, "/b/instances/"+deprovCmd.Args.InstanceIds[0], &out)
+	c.delete(url, "/b/instances/"+instance, &out)
 	return out
 }
