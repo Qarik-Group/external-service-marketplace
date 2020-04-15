@@ -149,15 +149,16 @@ func (c *client) Catalog() []tweed.Catalog {
 	return cats
 }
 
-func (c *client) UnBind(url string, unbindCmd util.UnbindCommand) api.UnbindResponse {
+func (c *client) UnBind(url string, instance string, binding string) api.UnbindResponse {
 	var un api.UnbindResponse
-	c.delete(url, "/b/instances/"+unbindCmd.Args.InstanceBinding[0]+"/bindings/"+unbindCmd.Args.InstanceBinding[1], &un)
+	c.delete(url, "/b/instances/"+instance+"/bindings/"+binding, &un)
 	return un
 }
 
-func (c *client) Bind(url string, bindCmd util.BindCommand) api.BindResponse {
+func (c *client) Bind(url string, instance string) api.BindResponse {
 	var out api.BindResponse
-	c.put(url, "/b/instances/"+bindCmd.Args.ID+"/bindings/"+bindCmd.ID, nil, &out)
+	bindingId := random.ID("i")
+	c.put(url, "/b/instances/"+instance+"/bindings/"+bindingId, nil, &out)
 	return out
 }
 

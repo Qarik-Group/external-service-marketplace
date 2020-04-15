@@ -99,7 +99,7 @@ func (a *API) Deprovision(prefix, instance string) (api.DeprovisionResponse, err
 	*/
 	return deprovInst, nil
 }
-func (a *API) BindSVC(cmd util.BindCommand, prefix string, instance string) (api.BindResponse, error) {
+func (a *API) BindSVC(prefix string, instance string) (api.BindResponse, error) {
 	fmt.Printf("Binding [%s][%s]\n", prefix, instance)
 
 	broker, found := a.Config.Broker(prefix)
@@ -110,7 +110,7 @@ func (a *API) BindSVC(cmd util.BindCommand, prefix string, instance string) (api
 
 	fmt.Printf("Binding against tweed at %s (u:%s, p:%s)\n", broker.URL, broker.Username, broker.Password)
 	t := tweed.Connect(a.Config)
-	bindInst := t.Bind(broker.URL, cmd)
+	bindInst := t.Bind(broker.URL, instance)
 
 	return bindInst, nil
 }
@@ -361,14 +361,14 @@ func (api API) Run() {
 	r.HandleFunc("/bind/{prefix}/{instance}/{binding}/{nowait}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		var bindCmd util.BindCommand
+		/*var bindCmd util.BindCommand
 		err := json.NewDecoder(r.Body).Decode(&bindCmd)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte("Error Reading Request Body"))
 			return
-		}
-		inst, err := api.BindSVC(bindCmd, vars["prefix"], vars["instance"])
+		}*/
+		inst, err := api.BindSVC(vars["prefix"], vars["instance"])
 		if err != nil {
 			w.WriteHeader(500)
 			fmt.Fprintf(w, "internal error: %s\n", err) // FIXME this is bad, don"t do it.
