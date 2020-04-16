@@ -4,4 +4,4 @@ WORKDIR /app
 EXPOSE 8090
 COPY esmd .
 COPY esmd.yml .
-CMD ["./esmd", "-l localhost:8090"]
+CMD ["./esmd", "-l localhost:8090", "-c esmd.yml"]
