@@ -3,12 +3,14 @@ package tweed
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/starkandwayne/external-service-marketplace/util"
 	"github.com/tweedproject/tweed"
 	"github.com/tweedproject/tweed/api"
+	"github.com/tweedproject/tweed/random"
 )
 
 type Config struct {
@@ -128,7 +130,12 @@ func (c *client) status() bool {
 	}
 	return false
 }
-
+func (c *client) SingleCatalog(url string) tweed.Catalog {
+	var cat tweed.Catalog
+	c.get(url, "/b/catalog", &cat)
+	util.JSON(cat)
+	return cat
+}
 func (c *client) Catalog() []tweed.Catalog {
 	var cat tweed.Catalog
 	broker := c.config.ServiceBrokers[0]
@@ -142,26 +149,31 @@ func (c *client) Catalog() []tweed.Catalog {
 	return cats
 }
 
-func (c *client) UnBind(url string, unbindCmd util.UnbindCommand) api.UnbindResponse {
+func (c *client) UnBind(url string, instance string, binding string) api.UnbindResponse {
 	var un api.UnbindResponse
-	c.delete(url, "/b/instances/"+unbindCmd.Args.InstanceBinding[0]+"/bindings/"+unbindCmd.Args.InstanceBinding[1], &un)
+	c.delete(url, "/b/instances/"+instance+"/bindings/"+binding, &un)
 	return un
 }
 
-func (c *client) Bind(url string, bindCmd util.BindCommand) api.BindResponse {
+func (c *client) Bind(url string, instance string) api.BindResponse {
 	var out api.BindResponse
-	c.put(url, "/b/instances/"+bindCmd.Args.ID+"/bindings/"+bindCmd.ID, nil, &out)
+	bindingId := random.ID("i")
+	c.put(url, "/b/instances/"+instance+"/bindings/"+bindingId, nil, &out)
 	return out
 }
 
 func (c *client) Provision(url string, provCmd util.ProvisionCommand) api.ProvisionResponse {
 	var out api.ProvisionResponse
-	c.put(url, "/b/instances/"+provCmd.ID, provCmd, &out)
+	id := random.ID("i")
+	fmt.Println("From Tweed Provision")
+	util.JSON(provCmd)
+	fmt.Println("ID: if used for provision :" + id)
+	c.put(url, "/b/instances/"+id, provCmd, &out)
 	return out
 }
 
-func (c *client) DeProvision(url string, deprovCmd util.DeprovisionCommand) api.DeprovisionResponse {
+func (c *client) DeProvision(url string, instance string) api.DeprovisionResponse {
 	var out api.DeprovisionResponse
-	c.delete(url, "/b/instances/"+deprovCmd.Args.InstanceIds[0], &out)
+	c.delete(url, "/b/instances/"+instance, &out)
 	return out
 }
