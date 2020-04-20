@@ -148,116 +148,6 @@ func testResponse(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Endpoint Hit")
 }
 
-/*func bindFunction(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tweedIndex := findTweed(vars["tweed"])
-	//instance := vars["instance"]
-	//binding := vars["binding"]
-	//nowait := vars["nowait"]
-	username := config.ServiceBrokers[tweedIndex].Username
-	password := config.ServiceBrokers[tweedIndex].Password
-	url := config.ServiceBrokers[tweedIndex].URL
-	//username, password, _ := r.BasicAuth()
-
-	var bindCmd util.BindCommand
-	err := json.NewDecoder(r.Body).Decode(&bindCmd)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Error Reading Request Body"))
-		return
-	}
-
-	res := tweed.Bind(username, password, url, bindCmd)
-	if res.Error != "" {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(res.Error))
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(res.Ref))
-
-} */
-
-/*func unbindFunction(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	instance := vars["instance"]
-	binding := vars["binding"]
-	tweedIndex := findTweed(vars["tweed"])
-	//nowait := vars["nowait"]
-
-	username := config.ServiceBrokers[tweedIndex].Username
-	password := config.ServiceBrokers[tweedIndex].Password
-	url := config.ServiceBrokers[tweedIndex].URL
-	//username, password, _ := r.BasicAuth()
-
-	instancebinding := make([]string, 2)
-	instancebinding[0] = instance
-	instancebinding[1] = binding
-
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Error Reading Request Body"))
-		return
-	}
-
-	var unbindCmd util.UnbindCommand
-	err = json.Unmarshal(body, &unbindCmd)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Did you use the UnbindCommand struct in util directory when you created your request. Please use that format"))
-		return
-	}
-
-	//unbindCmd.Args.InstanceBinding = instancebinding
-
-	res := tweed.UnBind(username, password, url, unbindCmd)
-	util.JSON(res)
-	data, _ := json.Marshal(res)
-	if res.Error != "" {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write(data)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(res.Ref))
-
-} */
-
-/*func deprovisionFunction(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	instance := vars["instance"]
-	tweedIndex := findTweed(vars["tweed"])
-	//nowait := vars["nowait"]
-	username := config.ServiceBrokers[tweedIndex].Username
-	password := config.ServiceBrokers[tweedIndex].Password
-	url := config.ServiceBrokers[tweedIndex].URL
-	//username, password, _ := r.BasicAuth()
-
-	s := make([]string, 1)
-	s[0] = instance
-
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Error Reading Request Body"))
-		return
-	}
-	var deprovCmd util.DeprovisionCommand
-	//deprovCmd.Args.InstanceIds = instance
-	json.Unmarshal(body, &deprovCmd)
-
-	res := tweed.DeProvision(username, password, url, deprovCmd)
-	if res.Error != "" {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Error In Request"))
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(res.Ref))
-
-} */
-
 func (api API) Run() {
 	config = api.Config
 	//url = "http://10.128.32.138:31666"
@@ -334,19 +224,6 @@ func (api API) Run() {
 	//deprovision an instance
 	r.HandleFunc("/deprovision/{prefix}/{instance}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-
-		//s := make([]string, 1)
-		//s[0] = vars["instance"]
-
-		/*body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Error Reading Request Body"))
-			return
-		}
-		var deprovCmd util.DeprovisionCommand
-		deprovCmd.Instance = instance
-		json.Unmarshal(body, &deprovCmd) */
 		inst, err := api.Deprovision(vars["prefix"], vars["instance"])
 		if err != nil {
 			w.WriteHeader(500)
@@ -358,16 +235,8 @@ func (api API) Run() {
 		//fmt.Fprintf(w, "OK %s\n", inst) // FIXME - use JSON, give some info back
 	})
 	//bind an instance
-	r.HandleFunc("/bind/{prefix}/{instance}/{binding}/{nowait}", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/bind/{prefix}/{instance}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-
-		/*var bindCmd util.BindCommand
-		err := json.NewDecoder(r.Body).Decode(&bindCmd)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Error Reading Request Body"))
-			return
-		}*/
 		inst, err := api.BindSVC(vars["prefix"], vars["instance"])
 		if err != nil {
 			w.WriteHeader(500)
@@ -381,22 +250,8 @@ func (api API) Run() {
 	//retrieve binding
 	r.HandleFunc("/getbinding/{instance}", testResponse)
 	//unbind an instance
-	r.HandleFunc("/unbind/{instance}/{binding}", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/unbind/{prefix}/{instance}/{binding}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Error Reading Request Body"))
-			return
-		}
-
-		var unbindCmd util.UnbindCommand
-		err = json.Unmarshal(body, &unbindCmd)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Did you use the UnbindCommand struct in util directory when you created your request. Please use that format"))
-			return
-		}
 		inst, err := api.Unbind(vars["prefix"], vars["instance"], vars["binding"])
 		if err != nil {
 			w.WriteHeader(500)
