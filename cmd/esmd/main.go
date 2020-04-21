@@ -28,15 +28,11 @@ func main() {
 		fmt.Fprintf(os.Stderr, "@R{!!! %s}\n", err)
 	}
 
-	if options.Listen == "" {
-		fmt.Fprintf(os.Stderr, "@R{!!! missing required --listen option}\n")
-		os.Exit(1)
-	}
-	config, err := util.ReadConfig(options.Config)
-	if err != nil {
+	config, _ := util.ReadConfig(options.Config)
+	/*if err != nil {
 		fmt.Fprintf(os.Stderr, "@R{!!! %s: %s}\n", options.Config, err)
 		os.Exit(1)
-	}
+	}*/
 
 	api := API{
 		Config: config,
@@ -47,5 +43,4 @@ func main() {
 	fmt.Fprintf(os.Stderr, "(listening on %s)\n", api.Bind)
 	api.Run()
 	fmt.Fprintf(os.Stderr, "api server exited...\n")
-	os.Exit(1)
 }
