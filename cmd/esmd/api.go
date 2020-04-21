@@ -114,7 +114,7 @@ func (a *API) BindSVC(prefix string, instance string) (api.BindResponse, error) 
 
 	return bindInst, nil
 }
-func (a *API) Unbind(cmd util.UnbindCommand, prefix, instance string) (api.UnbindResponse, error) {
+func (a *API) Unbind(prefix, instance string, binding string) (api.UnbindResponse, error) {
 	fmt.Printf("Unbinding [%s][%s]\n", prefix, instance)
 
 	broker, found := a.Config.Broker(prefix)
@@ -381,7 +381,7 @@ func (api API) Run() {
 	//retrieve binding
 	r.HandleFunc("/getbinding/{instance}", testResponse)
 	//unbind an instance
-	r.HandleFunc("/unbind/{instance}", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/unbind/{instance}/{binding}", func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
@@ -397,7 +397,7 @@ func (api API) Run() {
 			w.Write([]byte("Did you use the UnbindCommand struct in util directory when you created your request. Please use that format"))
 			return
 		}
-		inst, err := api.Unbind(unbindCmd, vars["prefix"], vars["instance"])
+		inst, err := api.Unbind(vars["prefix"], vars["instance"], vars["binding"])
 		if err != nil {
 			w.WriteHeader(500)
 			fmt.Fprintf(w, "internal error: %s\n", err) // FIXME this is bad, don"t do it.
