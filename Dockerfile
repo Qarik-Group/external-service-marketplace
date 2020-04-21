@@ -1,7 +1,5 @@
-FROM golang:1.14.2-alpine
-RUN mkdir /app
-WORKDIR /app
-EXPOSE 8090
-COPY esmd .
-COPY esmd.yml .
-CMD ["./esmd", "-l localhost:8090", "-c esmd.yml"]
+FROM scratch
+COPY ./esmd /go/bin/esmd
+COPY ./esmd.yml /go/bin/esmd.yml
+EXPOSE 8080
+CMD ["/go/bin/esmd", " -c esmd.yml"]
