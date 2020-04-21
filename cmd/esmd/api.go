@@ -126,7 +126,7 @@ func (a *API) Unbind(cmd util.UnbindCommand, prefix, instance string) (api.Unbin
 	fmt.Printf("Unbinding against tweed at %s (u:%s, p:%s)\n", broker.URL, broker.Username, broker.Password)
 
 	t := tweed.Connect(a.Config)
-	unbindInst := t.UnBind(broker.URL, cmd)
+	unbindInst := t.UnBind(broker.URL, instance, prefix)
 
 	return unbindInst, nil
 }
