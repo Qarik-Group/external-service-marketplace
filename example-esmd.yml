@@ -1,0 +1,69 @@
+# an exampl ESMD configuration file
+
+########  ########   #######  ##    ## ######## ########   ######
+##     ## ##     ## ##     ## ##   ##  ##       ##     ## ##    ##
+##     ## ##     ## ##     ## ##  ##   ##       ##     ## ##
+########  ########  ##     ## #####    ######   ########   ######
+##     ## ##   ##   ##     ## ##  ##   ##       ##   ##         ##
+##     ## ##    ##  ##     ## ##   ##  ##       ##    ##  ##    ##
+########  ##     ##  #######  ##    ## ######## ##     ##  ######
+
+service-brokers:
+  - prefix:   tweed1
+    url:      http://10.0.0.9:3000
+    username: tweed-user
+    password: sdflksdjflksdjflksdjflsjdf
+
+  - prefix:   new
+    url:      http://10.0.0.19:3000
+    username: TWEED
+    password: SEKRIT!
+
+ ######  ##        #######  ##     ## ########   ######
+##    ## ##       ##     ## ##     ## ##     ## ##    ##
+##       ##       ##     ## ##     ## ##     ## ##
+##       ##       ##     ## ##     ## ##     ##  ######
+##       ##       ##     ## ##     ## ##     ##       ##
+##    ## ##       ##     ## ##     ## ##     ## ##    ##
+ ######  ########  #######   #######  ########   ######
+
+clouds:
+  - id:   k8s1
+    name: Cloud Foundry (us-east-1)
+    type: k8s
+    kubeconfig:
+      apiVersion: v1
+      clusters:
+        - name: default
+            cluster:
+            server: https://10.0.0.18:6443
+            certificate-authority-data: Ls...
+
+  - id:   k8s2
+    name: Cloud Foundry (us-west-2)
+    type: k8s
+    kubeconfig:
+      apiVersion: v1
+      clusters:
+        - name: default
+            cluster:
+            server: https://10.0.0.18:6443
+            certificate-authority-data: Ls...
+
+  - id:   kubernoodles
+    name: Kubernetes (Buffalo Lab)
+    type: k8s
+    kubeconfig:
+      apiVersion: v1
+      clusters:
+        - name: default
+            cluster:
+            server: https://10.0.0.18:6443
+            certificate-authority-data: Ls...
+
+
+# esm catalog
+# esm create-service tweed1/pg/large
+# esm instances --for tweed1/pg/large
+# esm bind service-id-here cf2/demo-org/my-space/web-app1
+# esm bind service-id-here cf1/demo-org/my-space/web-app1
