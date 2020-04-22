@@ -13,9 +13,10 @@ import (
 )
 
 type Options struct {
-	Help  bool `cli:"-h, --help"`
-	Debug bool `cli:"-D, --debug" env:"ESM_DEBUG"`
-	Trace bool `cli:"-T, --trace" env:"ESM_TRACE"`
+	Help   bool   `cli:"-h, --help"`
+	Debug  bool   `cli:"-D, --debug" env:"ESM_DEBUG"`
+	Trace  bool   `cli:"-T, --trace" env:"ESM_TRACE"`
+	Prefix string `cli:"-r, --prefix" env:"ESM_PREFIX"`
 
 	Catalog struct {
 	} `cli:"catalog"`
@@ -23,16 +24,30 @@ type Options struct {
 	Provision struct { // sub commands to be entered here
 		Service string `cli:"-s, --service" env:"ESM_SERVICE"`
 		Plan    string `cli:"-p, --plan" env:"ESM_PLAN"`
+		// Prefix  string `cli:"-r, --prefix" env:"ESM_PREFIX"`
 	} `cli:"provision"`
 
 	Deprovision struct {
 		Instance string `cli:"-i, --instance" env:"ESM_INSTANCE"`
-	}
+
+		// Prefix   string `cli:"-r, --prefix" env:"ESM_PREFIX"`
+	} `cli:"deprovision"`
+
+	Bind struct {
+		Instance string `cli:"-i, --instance" env:"ESM_INSTANCE"`
+	} `cli:"bind"`
+	Unbind struct {
+		Instance string `cli:"-i, --instance" env:"ESM_INSTANCE"`
+
+		Inst_id string `cli:"-k, --instid" env:"ESM_INST_ID"`
+	} `cli:"unbind"`
 }
 
 func main() {
 
 	var options Options
+	// instance_bind := options.Bind.Instance
+	fmt.Printf("this is main %s \n", options.Prefix)
 
 	env.Override(&options)
 
@@ -62,58 +77,70 @@ func main() {
 		fmt.Printf("with arguments @C{%v}...\n", args)
 	}
 
-	// if command == "provision" {
+	if command == "provision" {
+		serv := options.Provision.Service
+		plan := options.Provision.Plan
+		prefix := options.Prefix
 
-	// 	var prov util.ProvisionCommand
-	// 	s := make([]string, 1)
-	// 	s[0] = "Redis"
-	// 	prov.Args.ServicePlan = s
-	// 	sp, _ := json.Marshal(prov)
-	// 	r := bytes.NewReader(sp)
-	// 	username := "tweed"
-	// 	passwd := "tweed"
-	// 	client := &http.Client{}
-	// 	req, err := http.NewRequest("POST", "http://localhost:8081/provision", r)
-	// 	req.SetBasicAuth(username, passwd)
-	// 	resp, err := client.Do(req)
-	// 	if err != nil {
-	// 		fmt.Printf("Error: not sent")
-	// 	}
-	// 	//defer req.Body.Close()
-	// 	//body, err := ioutil.ReadAll(req.Body)
-	// 	if err != nil {
-	// 		fmt.Printf("Error: body not read")
-	// 	}
-	// 	json.NewDecoder(resp.Body).Decode(&prov)
-	// 	//json.Unmarshal(body, &cat)
-	// 	util.JSON(prov)
+		fmt.Printf(prefix)
 
-	// 	//fmt.Printf("Provisioning... %s  %s", options.Provision.Service, options.Provision.Plan)
-	// }
-	// if command == "deprovision" {
-	// 	var prov util.ProvisionCommand
-	// 	s := make([]string, 1)
-	// 	s[0] = "Redis"
-	// 	prov.Args.ServicePlan = s
-	// 	sp, _ := json.Marshal(prov)
-	// 	r := bytes.NewReader(sp)
-	// 	username := "tweed"
-	// 	passwd := "tweed"
-	// 	client := &http.Client{}
-	// 	req, err := http.NewRequest("GET", "http://localhost:8081/provision", r)
-	// 	req.SetBasicAuth(username, passwd)
-	// 	resp, err := client.Do(req)
-	// 	if err != nil {
-	// 		fmt.Printf("Error: not sent")
-	// 	}
-	// 	//defer req.Body.Close()
-	// 	//body, err := ioutil.ReadAll(req.Body)
-	// 	if err != nil {
-	// 		fmt.Printf("Error: body not read")
-	// 	}
-	// 	json.NewDecoder(resp.Body).Decode(&prov)
-	// 	//json.Unmarshal(body, &cat)
-	// 	util.JSON(prov)
+		client := &http.Client{}
+		req, err := http.NewRequest("POST", "http://localhost:8081/provision/"+prefix+"--"+serv+"/"+plan, nil)
+		_, err = client.Do(req)
+		if err != nil {
+			fmt.Printf("Error: not sent")
+		}
+		//defer req.Body.Close()
+		//body, err := ioutil.ReadAll(req.Body)
+		if err != nil {
+			fmt.Printf("Error: body not read")
+		}
 
-	// }
+	}
+	if command == "deprovision" {
+		instance := options.Deprovision.Instance
+		prefix := options.Prefix
+
+		client := &http.Client{}
+		req, err := http.NewRequest("POST", "http://localhost:8081/deprovision/"+prefix+"/"+instance, nil)
+		_, err = client.Do(req)
+		if err != nil {
+			fmt.Printf("Error: not sent")
+		}
+		if err != nil {
+			fmt.Printf("Error: body not read")
+		}
+
+	}
+	if command == "bind" {
+		instance := options.Bind.Instance
+		prefix := options.Prefix
+
+		client := &http.Client{}
+		req, err := http.NewRequest("POST", "http://localhost:8081/bind/"+prefix+"/"+instance, nil)
+		_, err = client.Do(req)
+		if err != nil {
+			fmt.Printf("Error: not sent")
+		}
+		if err != nil {
+			fmt.Printf("Error: body not read")
+		}
+
+	}
+	if command == "unbind" {
+		inst_id := options.Unbind.Inst_id
+		prefix := options.Prefix
+
+		instance := options.Unbind.Instance
+		client := &http.Client{}
+		req, err := http.NewRequest("POST", "http://localhost:8081/unbind/"+prefix+"/"+instance+"/"+inst_id, nil)
+		_, err = client.Do(req)
+		if err != nil {
+			fmt.Printf("Error: not sent")
+		}
+		if err != nil {
+			fmt.Printf("Error: body not read")
+		}
+
+	}
 }

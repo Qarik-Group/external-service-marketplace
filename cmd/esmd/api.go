@@ -35,34 +35,58 @@ type API struct {
 }
 
 func (a *API) Catalog() (realtweed.Catalog, error) {
-	var c realtweed.Catalog
+	c := Catalog{}
 
-	/*for _, broker := range a.Config.ServiceBrokers {
-		cat := tweed.Catalog(broker.URL)
+	for _, broker := range a.Config.ServiceBrokers {
+		cat := tweed.Connect(a.Config).SingleCatalog(broker.URL)
 		c.Merge(broker.Prefix, cat)
-	}*/
-	//loop over catalogs and condense
-	cats := tweed.Connect(a.Config).Catalog()
-	for _, catalog := range cats {
-		c.Services = append(c.Services, catalog.Services[0])
 	}
+	//loop over catalogs and condense
+	/*cats := tweed.Connect(a.Config).Catalog()
+	for _, catalog := range cats {
+		c.Services = append(c.Services, catalog.Services)
+	}*/
 
-	return c, nil
+	return c.Catalog, nil
 }
 
-func (a *API) Provision(cmd util.ProvisionCommand, prefix string, service string, plan string) (api.ProvisionResponse, error) {
-	fmt.Printf("PROVISIONING [%s][%s][%s]\n", prefix, service, plan)
-
+func (a *API) Provision(cmd util.ProvisionCommand, prefix string) (api.ProvisionResponse, error) {
+	fmt.Printf("PROVISIONING [%s][%s][%s]\n", prefix, cmd.Service, cmd.Plan)
 	broker, found := a.Config.Broker(prefix)
 	var nothing api.ProvisionResponse
 	if !found {
 		return nothing, fmt.Errorf("no such broker '%s'", prefix)
 	}
-
+	fmt.Println("Provision From API")
+	util.JSON(cmd)
 	fmt.Printf("PROVISIONING against tweed at %s (u:%s, p:%s)\n", broker.URL, broker.Username, broker.Password)
 	// This is where we dispatch off to the actual broker.
 	t := tweed.Connect(a.Config)
 	provInst := t.Provision(broker.URL, cmd)
+	// in James' ideal world, here's what we do
+	/*
+		instance, err := broker.Backend.Provision(service, plan)
+		if err != nil {
+			return "", err
+		}
+		return instance.ID, nil
+	*/
+	return provInst, nil
+}
+
+func (a *API) Deprovision(prefix, instance string) (api.DeprovisionResponse, error) {
+	fmt.Printf("DEPROVISIONING [%s][%s]\n", prefix, instance)
+
+	broker, found := a.Config.Broker(prefix)
+	var nothing api.DeprovisionResponse
+	if !found {
+		return nothing, fmt.Errorf("no such broker '%s'", prefix)
+	}
+
+	fmt.Printf("DEPROVISIONING against tweed at %s (u:%s, p:%s)\n", broker.URL, broker.Username, broker.Password)
+	// This is where we dispatch off to the actual broker.
+	t := tweed.Connect(a.Config)
+	deprovInst := t.DeProvision(broker.URL, instance)
 
 	// in James' ideal world, here's what we do
 	/*
@@ -70,10 +94,24 @@ func (a *API) Provision(cmd util.ProvisionCommand, prefix string, service string
 		if err != nil {
 			return "", err
 		}
-
 		return instance.ID, nil
 	*/
-	return provInst, nil
+	return deprovInst, nil
+}
+func (a *API) BindSVC(prefix string, instance string) (api.BindResponse, error) {
+	fmt.Printf("Binding [%s][%s]\n", prefix, instance)
+
+	broker, found := a.Config.Broker(prefix)
+	var nothing api.BindResponse
+	if !found {
+		return nothing, fmt.Errorf("no such broker '%s'", prefix)
+	}
+
+	fmt.Printf("Binding against tweed at %s (u:%s, p:%s)\n", broker.URL, broker.Username, broker.Password)
+	t := tweed.Connect(a.Config)
+	bindInst := t.Bind(broker.URL, instance)
+
+	return bindInst, nil
 }
 func (a *API) Unbind(prefix, instance string, binding string) (api.UnbindResponse, error) {
 	fmt.Printf("Unbinding [%s][%s]\n", prefix, instance)
@@ -160,18 +198,23 @@ func (api API) Run() {
 			return
 		}
 		var provCmd util.ProvisionCommand
-		s := make([]string, 2)
-		s[0] = service
-		s[1] = plan
 		json.Unmarshal(body, &provCmd)
+		provCmd.Service = service
+		provCmd.Plan = plan //not sure if this works
 
-		inst, err := api.Provision(provCmd, prefix, service, plan)
+		inst, err := api.Provision(provCmd, prefix)
 		if err != nil {
 			w.WriteHeader(500)
 			fmt.Fprintf(w, "internal error: %s\n", err) // FIXME this is bad, don"t do it.
 			return
+		} else if inst.Error != "" {
+			w.Write([]byte(inst.Ref))
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 		w.WriteHeader(200)
+		w.Write([]byte(inst.Ref))
+		//json.NewEncoder(w).Encode(inst)
 		fmt.Fprintf(w, "OK %s\n", inst) // FIXME - use JSON, give some info back
 	})
 
