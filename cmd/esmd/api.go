@@ -264,5 +264,5 @@ func (api API) Run() {
 	})
 
 	//start the server
-	log.Fatal(http.ListenAndServe(api.Bind, r))
+	log.Fatal(http.ListenAndServe(":"+api.Bind, r))
 }
