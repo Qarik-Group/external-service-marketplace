@@ -94,7 +94,6 @@ func (a *API) Deprovision(prefix, instance string) (api.DeprovisionResponse, err
 		if err != nil {
 			return "", err
 		}
-
 		return instance.ID, nil
 	*/
 	return deprovInst, nil

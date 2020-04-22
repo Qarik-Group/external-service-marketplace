@@ -6,7 +6,25 @@ import (
 	"github.com/starkandwayne/external-service-marketplace/tweed"
 	"github.com/starkandwayne/external-service-marketplace/util"
 )
+<<<<<<< HEAD
+=======
 
+<<<<<<< HEAD
+>>>>>>> multiple-tweed-routes
+func TestUnBind(t *testing.T) {
+	var unbindCmd util.UnbindCommand
+	ids := []string{"hi", "hello"}
+	unbindCmd.Args.InstanceBinding = ids
+	var conf tweed.Config
+	client := tweed.Connect(conf)
+	res := client.UnBind("http://10.128.32.138:31666", unbindCmd)
+	if res.Error == "" && res.OK == "" {
+		t.Errorf("Error in TestUnBind()\n" + res.Error + "\n res: \n" + res.Ref)
+	}
+}
+
+=======
+>>>>>>> multiple-tweed-routes
 func TestBind(t *testing.T) {
 	var conf *util.Config
 	client := tweed.Connect(conf)
