@@ -13,33 +13,34 @@ import (
 )
 
 type Options struct {
-	Help   bool   `cli:"-h, --help"`
-	Debug  bool   `cli:"-D, --debug" env:"ESM_DEBUG"`
-	Trace  bool   `cli:"-T, --trace" env:"ESM_TRACE"`
-	Prefix string `cli:"-r, --prefix" env:"ESM_PREFIX"`
+	Help  bool `cli:"-h, --help"`
+	Debug bool `cli:"-D, --debug" env:"ESM_DEBUG"`
+	Trace bool `cli:"-T, --trace" env:"ESM_TRACE"`
 
 	Catalog struct {
 	} `cli:"catalog"`
 
 	Provision struct { // sub commands to be entered here
-		Service string `cli:"-s, --service" env:"ESM_SERVICE"`
+		Service string `cli:"-s, --service" env:"ESM_SERVICE_PROV"`
 		Plan    string `cli:"-p, --plan" env:"ESM_PLAN"`
-		// Prefix  string `cli:"-r, --prefix" env:"ESM_PREFIX"`
+		Prefix  string `cli:"-r, --prefix" env:"ESM_PREFIX_PROV"`
 	} `cli:"provision"`
 
 	Deprovision struct {
-		Instance string `cli:"-i, --instance" env:"ESM_INSTANCE"`
+		Instance string `cli:"-i, --instance" env:"ESM_INSTANCE_DEPROV"`
 
-		// Prefix   string `cli:"-r, --prefix" env:"ESM_PREFIX"`
+		Prefix string `cli:"-r, --prefix" env:"ESM_PREFIX_DEPROV"`
 	} `cli:"deprovision"`
 
 	Bind struct {
-		Instance string `cli:"-i, --instance" env:"ESM_INSTANCE"`
+		Prefix string `cli:"-r, --prefix" env:"ESM_PREFIX_BIND"`
+
+		Instance string `cli:"-i, --instance" env:"ESM_INSTANCE_BIND"`
 	} `cli:"bind"`
 	Unbind struct {
-		Instance string `cli:"-i, --instance" env:"ESM_INSTANCE"`
-
-		Inst_id string `cli:"-k, --instid" env:"ESM_INST_ID"`
+		Instance string `cli:"-i, --instance" env:"ESM_INSTANCE_UNBIND"`
+		Prefix   string `cli:"-r, --prefix" env:"ESM_PREFIX_UNBIND"`
+		Binding  string `cli:"-k, --binding" env:"ESM_INST_ID"`
 	} `cli:"unbind"`
 }
 
@@ -47,9 +48,10 @@ func main() {
 
 	var options Options
 	// instance_bind := options.Bind.Instance
-	fmt.Printf("this is main %s \n", options.Prefix)
+	// prefix := options.Prefix
 
 	env.Override(&options)
+	// fmt.Printf("this is main %s \n", options.Prefix)
 
 	command, args, err := cli.Parse(&options)
 	if err != nil {
@@ -80,9 +82,9 @@ func main() {
 	if command == "provision" {
 		serv := options.Provision.Service
 		plan := options.Provision.Plan
-		prefix := options.Prefix
+		prefix := options.Provision.Prefix
 
-		fmt.Printf(prefix)
+		// fmt.Printf(prefix)
 
 		client := &http.Client{}
 		req, err := http.NewRequest("POST", "http://localhost:8081/provision/"+prefix+"--"+serv+"/"+plan, nil)
@@ -90,8 +92,6 @@ func main() {
 		if err != nil {
 			fmt.Printf("Error: not sent")
 		}
-		//defer req.Body.Close()
-		//body, err := ioutil.ReadAll(req.Body)
 		if err != nil {
 			fmt.Printf("Error: body not read")
 		}
@@ -99,7 +99,7 @@ func main() {
 	}
 	if command == "deprovision" {
 		instance := options.Deprovision.Instance
-		prefix := options.Prefix
+		prefix := options.Deprovision.Prefix
 
 		client := &http.Client{}
 		req, err := http.NewRequest("POST", "http://localhost:8081/deprovision/"+prefix+"/"+instance, nil)
@@ -114,7 +114,7 @@ func main() {
 	}
 	if command == "bind" {
 		instance := options.Bind.Instance
-		prefix := options.Prefix
+		prefix := options.Bind.Prefix
 
 		client := &http.Client{}
 		req, err := http.NewRequest("POST", "http://localhost:8081/bind/"+prefix+"/"+instance, nil)
@@ -128,12 +128,12 @@ func main() {
 
 	}
 	if command == "unbind" {
-		inst_id := options.Unbind.Inst_id
-		prefix := options.Prefix
+		binding := options.Unbind.Binding
+		prefix := options.Unbind.Prefix
 
 		instance := options.Unbind.Instance
 		client := &http.Client{}
-		req, err := http.NewRequest("POST", "http://localhost:8081/unbind/"+prefix+"/"+instance+"/"+inst_id, nil)
+		req, err := http.NewRequest("POST", "http://localhost:8081/unbind/"+prefix+"/"+instance+"/"+binding, nil)
 		_, err = client.Do(req)
 		if err != nil {
 			fmt.Printf("Error: not sent")
