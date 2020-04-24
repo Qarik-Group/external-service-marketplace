@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-hello: 
-	echo "Hello"
-run:
-	go run cmd/main.go
-=======
 bins: esm esmd
 
 esm:
@@ -17,4 +11,3 @@ tester:
 
 clean:
 	rm -f esm esmd
->>>>>>> df02bfd76a1796128d65681a9d487de5e9d0fd22

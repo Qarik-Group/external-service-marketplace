@@ -27,25 +27,6 @@ func GetUserName() string {
 	return un
 }
 
-func GetPassword() string {
-	pw, err := os.LookupEnv("TWEED_PASSWORD")
-	if !err {
-		log.Fatal("Set your TWEED_PASSWROD env variable before using cli")
-	}
-	return pw
-}
-
-func JSON(v interface{}) {
-	b, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "@R{(error)} failed to marshal JSON:\n")
-		fmt.Fprintf(os.Stderr, "        @R{%s}\n", err)
-		os.Exit(1)
-	}
-
-	fmt.Printf("%s\n", string(b))
-}
-
 func ReadResponse(r *http.Response) []byte {
 	defer r.Body.Close()
 	bodyBytes, err := ioutil.ReadAll(r.Body)

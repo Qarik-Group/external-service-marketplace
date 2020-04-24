@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -77,9 +78,7 @@ func main() {
 		fmt.Printf("List services \n")
 		fmt.Printf("running command @G{%s}...\n", command)
 		fmt.Printf("with arguments @C{%v}...\n", args)
-	}
-
-	if command == "provision" {
+	} else if command == "provision" {
 		serv := options.Provision.Service
 		plan := options.Provision.Plan
 		prefix := options.Provision.Prefix
@@ -88,59 +87,66 @@ func main() {
 
 		client := &http.Client{}
 		req, err := http.NewRequest("POST", "http://localhost:8081/provision/"+prefix+"--"+serv+"/"+plan, nil)
-		_, err = client.Do(req)
+		resp, err := client.Do(req)
 		if err != nil {
 			fmt.Printf("Error: not sent")
 		}
 		if err != nil {
 			fmt.Printf("Error: body not read")
 		}
+		body, err := ioutil.ReadAll(resp.Body)
+		fmt.Printf("\n", string(body))
 
-	}
-	if command == "deprovision" {
+	} else if command == "deprovision" {
 		instance := options.Deprovision.Instance
 		prefix := options.Deprovision.Prefix
 
 		client := &http.Client{}
 		req, err := http.NewRequest("POST", "http://localhost:8081/deprovision/"+prefix+"/"+instance, nil)
-		_, err = client.Do(req)
+		resp, err := client.Do(req)
 		if err != nil {
 			fmt.Printf("Error: not sent")
 		}
 		if err != nil {
 			fmt.Printf("Error: body not read")
 		}
-
-	}
-	if command == "bind" {
+		body, err := ioutil.ReadAll(resp.Body)
+		fmt.Printf("\n", string(body))
+	} else if command == "bind" {
 		instance := options.Bind.Instance
 		prefix := options.Bind.Prefix
 
 		client := &http.Client{}
 		req, err := http.NewRequest("POST", "http://localhost:8081/bind/"+prefix+"/"+instance, nil)
-		_, err = client.Do(req)
+		resp, err := client.Do(req)
 		if err != nil {
 			fmt.Printf("Error: not sent")
 		}
 		if err != nil {
 			fmt.Printf("Error: body not read")
 		}
-
-	}
-	if command == "unbind" {
+		body, err := ioutil.ReadAll(resp.Body)
+		fmt.Printf("\n", string(body))
+	} else if command == "unbind" {
 		binding := options.Unbind.Binding
 		prefix := options.Unbind.Prefix
 
 		instance := options.Unbind.Instance
 		client := &http.Client{}
 		req, err := http.NewRequest("POST", "http://localhost:8081/unbind/"+prefix+"/"+instance+"/"+binding, nil)
-		_, err = client.Do(req)
+		resp, err := client.Do(req)
 		if err != nil {
 			fmt.Printf("Error: not sent")
 		}
 		if err != nil {
 			fmt.Printf("Error: body not read")
 		}
+		body, err := ioutil.ReadAll(resp.Body)
+		// fmt.Printf("\n")
+		fmt.Printf(string(body))
 
+	} else {
+		fmt.Printf("Please enter correct command string \n")
 	}
+
 }

@@ -152,6 +152,8 @@ func (c *client) Catalog() []tweed.Catalog {
 func (c *client) UnBind(url string, instance string, binding string) api.UnbindResponse {
 	var un api.UnbindResponse
 	c.delete(url, "/b/instances/"+instance+"/bindings/"+binding, &un)
+	// fmt.Printf(instance)
+	// fmt.Printf(binding)
 	return un
 }
 
